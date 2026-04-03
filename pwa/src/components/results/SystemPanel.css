@@ -1,0 +1,103 @@
+/* ============================================================
+   SystemPanel
+   ============================================================ */
+.system-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.system-section {
+  padding: 18px 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+/* Key-value grid */
+.kv-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  gap: 0;
+}
+
+.kv-label,
+.kv-value {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.kv-grid > dt:last-of-type,
+.kv-grid > dt:last-of-type + dd {
+  border-bottom: none;
+}
+
+.kv-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-right: 16px;
+}
+
+.kv-value {
+  color: var(--text-primary);
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.kv-value--empty {
+  color: var(--text-faint);
+  font-family: inherit;
+  font-style: italic;
+}
+
+/* Versions table */
+.versions-table-wrap {
+  overflow-x: auto;
+}
+
+.versions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.versions-table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+
+.versions-table td {
+  padding: 7px 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.versions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.versions-table tbody tr:hover td {
+  background: var(--accent-hover);
+}
+
+.versions-table code {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+}

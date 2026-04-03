@@ -1,0 +1,228 @@
+/* ============================================================
+   FileDropzone
+   ============================================================ */
+.dropzone-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.dropzone-container {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dropzone-header {
+  text-align: center;
+}
+
+.dropzone-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+  margin-bottom: 8px;
+}
+
+.dropzone-tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Drop target zone */
+.dropzone-target {
+  border: 2px dashed var(--border-solid);
+  border-radius: 12px;
+  padding: 40px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  background: var(--bg-card-alt);
+  min-height: 160px;
+  outline: none;
+}
+
+.dropzone-target:hover,
+.dropzone-target:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.dropzone-target.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  box-shadow: 0 0 0 4px var(--accent-hover), var(--glass-shadow);
+}
+
+.dropzone-target.has-file {
+  cursor: default;
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+/* Prompt (no file) */
+.dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.drop-icon {
+  font-size: 40px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.drop-main {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.drop-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.browse-btn {
+  margin-top: 4px;
+}
+
+/* File info (file selected) */
+.dropzone-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.file-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.file-clear-btn {
+  flex-shrink: 0;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+/* Form */
+.dropzone-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  backdrop-filter: var(--glass-blur);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.form-label-optional {
+  font-weight: 400;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  appearance: auto;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.form-textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Actions */
+.dropzone-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.analyze-btn {
+  padding: 11px 36px;
+  font-size: 15px;
+  min-width: 200px;
+}
+
+.dropzone-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+}

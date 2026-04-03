@@ -1,0 +1,700 @@
+/* ============================================================
+   Results.css — Shared utilities for all result panels
+   ============================================================ */
+
+/* ---- Info Grid ---- */
+.info-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  align-items: start;
+}
+
+.info-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 3px 0;
+  white-space: nowrap;
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  word-break: break-all;
+  padding: 3px 0;
+}
+
+.info-value code {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.8rem;
+}
+
+/* ---- Panel layout ---- */
+.panel-section {
+  margin-bottom: 16px;
+}
+
+.panel-heading {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---- Status text ---- */
+.status-running {
+  color: var(--severity-ok);
+  font-weight: 600;
+}
+
+.status-stopped {
+  color: var(--severity-critical);
+  font-weight: 600;
+}
+
+.status-unknown {
+  color: var(--text-muted);
+}
+
+/* ---- Progress bar ---- */
+.progress-bar-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-fill--critical {
+  background: var(--severity-critical);
+}
+
+.progress-bar-fill--warning {
+  background: var(--severity-warning);
+}
+
+/* ---- Port status ---- */
+.port-listening {
+  color: var(--severity-ok);
+}
+
+.port-blocked {
+  color: var(--severity-critical);
+}
+
+/* ---- Log content ---- */
+.log-content {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+/* ---- Data table (reusable) ---- */
+.data-table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 6px 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+  background: var(--accent-hover);
+}
+
+.data-table code {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+/* ---- Collapsible details ---- */
+details.panel-details {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+details.panel-details summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card-alt);
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+details.panel-details summary::before {
+  content: '▶';
+  font-size: 9px;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+details.panel-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details.panel-details .details-body {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Placeholder ---- */
+.panel-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* ---- Connection state badges ---- */
+.badge-connected {
+  background: rgba(64, 176, 112, 0.15);
+  color: var(--severity-ok);
+  border: 1px solid rgba(64, 176, 112, 0.3);
+}
+
+.badge-disconnected {
+  background: rgba(232, 64, 64, 0.15);
+  color: var(--severity-critical);
+  border: 1px solid rgba(232, 64, 64, 0.3);
+}
+
+.badge-neutral {
+  background: rgba(122, 132, 168, 0.15);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ---- Activity timeline ---- */
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-left: 2px solid var(--border);
+  margin-left: 8px;
+  padding-left: 16px;
+}
+
+.timeline-item {
+  position: relative;
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.timeline-ts {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  margin-bottom: 2px;
+}
+
+.timeline-action {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.timeline-detail {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+/* ---- Bar chart ---- */
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar-chart-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 48px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.bar-chart-label {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 11px;
+}
+
+.bar-chart-bar-track {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-chart-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.bar-chart-count {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+/* ---- Disk drive card ---- */
+.drive-card {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.drive-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.drive-letter {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+}
+
+.drive-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.drive-stats {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ---- Key driver card ---- */
+.key-driver-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.key-driver-card {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card-alt);
+}
+
+.key-driver-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.key-driver-version {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+}
+
+.key-driver-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.key-driver-absent {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ---- Camera card ---- */
+.camera-card {
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.camera-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+/* ---- Log entry ---- */
+.log-entry {
+  padding: 8px 10px;
+  border-left: 2px solid var(--border);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.log-entry--error {
+  border-left-color: var(--severity-critical);
+  background: rgba(232, 64, 64, 0.04);
+}
+
+.log-entry--warning {
+  border-left-color: var(--severity-warning);
+  background: rgba(240, 160, 64, 0.04);
+}
+
+.log-entry--info {
+  border-left-color: var(--severity-info);
+}
+
+.log-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.log-entry-source {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.log-entry-message {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.log-entry-context {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 4px 6px;
+  border-radius: 3px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* ---- Session table row ---- */
+.session-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.session-table th {
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+
+.session-table td {
+  padding: 6px 8px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.session-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Network adapter ---- */
+.net-adapter-card {
+  margin-bottom: 14px;
+}
+
+.net-adapter-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.net-adapter-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Error box ---- */
+.problem-box {
+  background: rgba(232, 64, 64, 0.07);
+  border: 1px solid rgba(232, 64, 64, 0.25);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.problem-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--severity-critical);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.problem-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 2px 0;
+}
+
+/* ---- USB list ---- */
+.usb-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usb-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  background: var(--bg-card-alt);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* ---- Show all button ---- */
+.show-all-btn {
+  margin-top: 10px;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.show-all-btn:hover {
+  background: var(--accent-hover);
+  color: var(--text-primary);
+}
+
+/* ---- Stat summary bar ---- */
+.stat-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-value--critical {
+  color: var(--severity-critical);
+}
+
+.stat-value--warning {
+  color: var(--severity-warning);
+}
+
+.stat-value--ok {
+  color: var(--severity-ok);
+}
+
+/* ---- Big status badge ---- */
+.status-badge-large {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status-badge-large--running {
+  background: rgba(64, 176, 112, 0.15);
+  color: var(--severity-ok);
+  border: 1px solid rgba(64, 176, 112, 0.3);
+}
+
+.status-badge-large--stopped {
+  background: rgba(232, 64, 64, 0.15);
+  color: var(--severity-critical);
+  border: 1px solid rgba(232, 64, 64, 0.3);
+}
+
+.status-badge-large--unknown {
+  background: rgba(122, 132, 168, 0.15);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ---- Log file list ---- */
+.log-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-file-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.log-file-name {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.log-file-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.log-file-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+/* ---- Address list ---- */
+.addr-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.addr-list li {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* ---- Licensed products badge list ---- */
+.product-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.product-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}

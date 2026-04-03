@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+# Copied at build time by scripts/setup.mjs
+public/knowledge_base/
+public/icons/

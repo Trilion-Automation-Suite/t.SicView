@@ -1,0 +1,443 @@
+/* ============================================================
+   CSS Reset
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================================
+   Design Tokens — Default / Dark Theme
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --bg-page: #1a1c2e;
+  --bg-card: rgba(30, 33, 55, 0.85);
+  --bg-card-solid: #1e2137;
+  --bg-card-alt: rgba(35, 38, 60, 0.9);
+  --bg-card-hover: rgba(42, 46, 72, 0.95);
+  --border: rgba(75, 85, 130, 0.5);
+  --border-solid: #3a3f65;
+  --text-primary: #e8eaf6;
+  --text-secondary: #b0b8d8;
+  --text-muted: #7a84a8;
+  --text-faint: #4a5270;
+  --header-bg: #25283d;
+  --accent: #6c8ebf;
+  --accent-hover: rgba(108, 142, 191, 0.15);
+  --accent-subtle: rgba(108, 142, 191, 0.1);
+  --severity-critical: #e84040;
+  --severity-warning: #f0a040;
+  --severity-info: #5090e0;
+  --severity-ok: #40b070;
+  --glass-blur: blur(16px) saturate(180%);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.16);
+
+  /* Extra dark override for data-theme="dark" */
+  --bg-page: #0d0f1a;
+}
+
+[data-theme="light"] {
+  --bg-page: #f0f2f8;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-solid: #ffffff;
+  --bg-card-alt: rgba(240, 242, 250, 0.95);
+  --bg-card-hover: rgba(230, 234, 248, 0.98);
+  --border: rgba(100, 110, 180, 0.25);
+  --border-solid: #c8cde8;
+  --text-primary: #1a1c2e;
+  --text-secondary: #3a4060;
+  --text-muted: #6a72a0;
+  --text-faint: #a0a8c8;
+  --header-bg: #25283d;
+  --accent: #4a6ea8;
+  --accent-hover: rgba(74, 110, 168, 0.1);
+  --accent-subtle: rgba(74, 110, 168, 0.07);
+  --severity-critical: #cc2020;
+  --severity-warning: #c07010;
+  --severity-info: #2060c0;
+  --severity-ok: #207050;
+  --glass-blur: blur(16px) saturate(140%);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-solid);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+}
+
+/* ============================================================
+   Card
+   ============================================================ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ============================================================
+   Badges
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-critical {
+  background: rgba(232, 64, 64, 0.15);
+  color: var(--severity-critical);
+  border: 1px solid rgba(232, 64, 64, 0.3);
+}
+
+.badge-warning {
+  background: rgba(240, 160, 64, 0.15);
+  color: var(--severity-warning);
+  border: 1px solid rgba(240, 160, 64, 0.3);
+}
+
+.badge-info {
+  background: rgba(80, 144, 224, 0.15);
+  color: var(--severity-info);
+  border: 1px solid rgba(80, 144, 224, 0.3);
+}
+
+.badge-ok {
+  background: rgba(64, 176, 112, 0.15);
+  color: var(--severity-ok);
+  border: 1px solid rgba(64, 176, 112, 0.3);
+}
+
+/* ============================================================
+   Spinner
+   ============================================================ */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ============================================================
+   Tab Bar
+   ============================================================ */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  background: var(--accent-hover);
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ============================================================
+   App Header
+   ============================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.header-logo {
+  height: 24px;
+  width: auto;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.header-app-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.header-beta {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(240, 160, 64, 0.15);
+  color: var(--severity-warning);
+  border: 1px solid rgba(240, 160, 64, 0.3);
+  flex-shrink: 0;
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.header-filename {
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn-ghost {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-ghost:hover {
+  background: var(--accent-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================================
+   Theme Toggle
+   ============================================================ */
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--accent-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   App Main
+   ============================================================ */
+.app-main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   Error States
+   ============================================================ */
+.app-error {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-box {
+  background: var(--bg-card);
+  border: 1px solid rgba(232, 64, 64, 0.3);
+  border-radius: 12px;
+  padding: 32px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.error-box h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--severity-critical);
+  margin-bottom: 12px;
+}
+
+.error-box p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   App Footer
+   ============================================================ */
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 20px;
+  height: 36px;
+  background: var(--header-bg);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.footer-version {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  flex-shrink: 0;
+}
+
+.footer-legal {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-left: auto;
+}
+
+/* ============================================================
+   Utility
+   ============================================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

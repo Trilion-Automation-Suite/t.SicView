@@ -1,0 +1,33 @@
+{
+  "name": "t-sicview-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "npm run setup && vite",
+    "build": "npm run setup && tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "fflate": "^0.8.2",
+    "sql.js": "^1.12.0",
+    "js-yaml": "^4.1.0",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@types/sql.js": "^1.4.9",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.2",
+    "vite-plugin-pwa": "^0.20.5",
+    "vite-plugin-static-copy": "^2.1.0"
+  }
+}

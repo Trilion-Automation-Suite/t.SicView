@@ -1,0 +1,44 @@
+/* ============================================================
+   RawPanel
+   ============================================================ */
+.raw-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.raw-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.raw-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.raw-copy-btn {
+  font-size: 12px;
+}
+
+.raw-pre {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre;
+  max-height: 600px;
+}
+
+.raw-pre code {
+  font: inherit;
+  color: inherit;
+}
