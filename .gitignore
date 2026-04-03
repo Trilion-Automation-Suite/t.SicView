@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Node / Electron
+node_modules/
+standalone/out/
+standalone/build/dist/
+standalone/build/work/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.local
+
+# Testing
+.pytest_cache/
+coverage/
+htmlcov/
+.ruff_cache/
+tests/fixtures/
+
+# Claude
+.claude/
+.claude-flow/

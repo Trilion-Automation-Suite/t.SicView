@@ -1,0 +1,49 @@
+name: Bug report
+description: Something isn't working correctly
+labels: [bug]
+body:
+  - type: input
+    id: archive-type
+    attributes:
+      label: Archive type
+      placeholder: .zip, .tgz, or gomsic report
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect vs what actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open archive ...
+        2. Click ...
+        3. See error ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows (Electron app)
+        - macOS (Electron app)
+        - Browser (web UI)
+    validations:
+      required: true
+
+  - type: input
+    id: zeiss-product
+    attributes:
+      label: ZEISS product type
+      placeholder: e.g. ATOS Q, ARAMIS 24M, GOM Scan 1
+    validations:
+      required: false

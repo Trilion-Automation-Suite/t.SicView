@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "t-sicview"
+version = "0.3.0"
+description = "Diagnostic viewer for ZEISS Quality Suite support archives"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Proprietary"}
+authors = [
+    {name = "Trilion Quality Systems", email = "devs@trilion.com"},
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "jinja2>=3.0",
+    "python-multipart>=0.0.5",
+]
+evtx = ["python-evtx>=0.7"]
+pdf = ["weasyprint>=60.0"]
+standalone = ["pyinstaller>=6.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1",
+]
+all = ["t-sicview[evtx,pdf,dev]"]
+
+[tool.setuptools.packages.find]
+include = ["gomsic_core*", "server*"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

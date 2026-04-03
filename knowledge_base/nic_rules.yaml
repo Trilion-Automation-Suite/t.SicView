@@ -1,0 +1,192 @@
+# NIC configuration rules for ZEISS measurement systems
+#
+# Each adapter type has:
+#   match: list of regex patterns to match the adapter description (ifDesc)
+#   required_for: list of ProductType values (optional -- checks only for these products)
+#   expected_properties: dict of registry_keyword -> expected_value
+#     Values prefixed with >= are minimum thresholds (e.g., ">=9000" means >= 9000)
+#   violation_severity: severity when a property doesn't match
+#   recommendation: general recommendation for violations
+#
+# Sources:
+#   - ARAMIS 24M Mellanox settings: verified from working production system (2026-04-01)
+#   - ARAMIS 12M/4M controller NIC: Trilion field experience
+#   - ARAMIS SRX 10GbE: preliminary (flow control + jumbo only)
+
+# Display name mapping: registry keyword -> Windows GUI label
+property_display_names:
+  FlowControl: "Flow Control"
+  InterruptModeration: "Interrupt Moderation"
+  JumboPacket: "Jumbo Packet"
+  LsoV2IPv4: "Large Send Offload V2 (IPv4)"
+  LsoV2IPv6: "Large Send Offload V2 (IPv6)"
+  TCPUDPChecksumOffloadIPv4: "TCP/UDP Checksum Offload (IPv4)"
+  TCPUDPChecksumOffloadIPv6: "TCP/UDP Checksum Offload (IPv6)"
+  TCPChecksumOffloadIPv4: "TCP Checksum Offload (IPv4)"
+  TCPChecksumOffloadIPv6: "TCP Checksum Offload (IPv6)"
+  UDPChecksumOffloadIPv4: "UDP Checksum Offload (IPv4)"
+  UDPChecksumOffloadIPv6: "UDP Checksum Offload (IPv6)"
+  IPChecksumOffloadIPv4: "IPv4 Checksum Offload"
+  ReceiveBuffers: "Receive Buffers"
+  SendBuffers: "Send Buffers"
+  TransmitBuffers: "Transmit Buffers"
+  PacketDirect: "Packet Direct"
+  RscIPv4: "Receive Segment Coalescing (IPv4)"
+  RscIPv6: "Receive Segment Coalescing (IPv6)"
+  UsoIPv4: "UDP Segment Offload (IPv4)"
+  UsoIPv6: "UDP Segment Offload (IPv6)"
+  RSS: "Receive Side Scaling"
+  NetworkDirect: "NetworkDirect Functionality"
+  SRIOV: "SR-IOV"
+  VMQ: "Virtual Machine Queues"
+
+# Value descriptions: how numeric/text values map to GUI labels
+value_descriptions:
+  FlowControl:
+    "0": "Disabled"
+    "1": "Tx Enabled"
+    "2": "Rx Enabled"
+    "3": "Rx & Tx Enabled"
+  InterruptModeration:
+    "0": "Disabled"
+    "1": "Enabled"
+  LsoV2IPv4: &bool_offload
+    "0": "Disabled"
+    "1": "Enabled"
+  LsoV2IPv6: *bool_offload
+  PacketDirect: *bool_offload
+  RscIPv4: *bool_offload
+  RscIPv6: *bool_offload
+  UsoIPv4: *bool_offload
+  UsoIPv6: *bool_offload
+  RSS: *bool_offload
+  NetworkDirect: *bool_offload
+  SRIOV: *bool_offload
+  VMQ: *bool_offload
+  TCPUDPChecksumOffloadIPv4: &checksum_offload
+    "0": "Disabled"
+    "1": "Tx Enabled"
+    "2": "Rx Enabled"
+    "3": "Rx & Tx Enabled"
+  TCPUDPChecksumOffloadIPv6: *checksum_offload
+  IPChecksumOffloadIPv4: *checksum_offload
+
+adapters:
+
+  # =========================================================================
+  # ARAMIS 24M: Mellanox ConnectX-5 (25/50 GbE camera streaming)
+  #
+  # Source: verified from working ARAMIS 24M production system (2026-04-01)
+  # These are the exact settings from a brand new, functional adapter.
+  # =========================================================================
+  mellanox_aramis24m:
+    match:
+      - "ConnectX-5"
+      - "Mellanox.*ConnectX"
+      - "mlx5"
+    required_for:
+      - "ARAMIS 24M"
+    expected_properties:
+      "FlowControl": "0"                        # Disabled
+      "InterruptModeration": "1"                 # Enabled
+      "JumboPacket": ">=9000"                    # 9000 (jumbo frames)
+      "IPChecksumOffloadIPv4": "3"               # Rx & Tx Enabled
+      "LsoV2IPv4": "1"                           # Enabled
+      "LsoV2IPv6": "1"                           # Enabled
+      "TCPUDPChecksumOffloadIPv4": "3"           # Rx & Tx Enabled
+      "TCPUDPChecksumOffloadIPv6": "3"           # Rx & Tx Enabled
+      "ReceiveBuffers": ">=4096"                 # 4096
+      "SendBuffers": ">=2048"                    # 2048
+      "PacketDirect": "1"                        # Enabled
+      "RscIPv4": "1"                             # Enabled
+      "RscIPv6": "1"                             # Enabled
+      "UsoIPv4": "1"                             # Enabled
+      "UsoIPv6": "1"                             # Enabled
+      "RSS": "1"                                 # Enabled
+      "NetworkDirect": "1"                       # Enabled
+      "SRIOV": "1"                               # Enabled
+      "VMQ": "1"                                 # Enabled
+    violation_severity: WARNING
+    recommendation: >
+      Mellanox ConnectX-5 settings for ARAMIS 24M verified from a working
+      production system. Flow Control must be Disabled, Interrupt Moderation
+      Enabled, Jumbo Frames 9000, and all offloads/RSS/SR-IOV enabled.
+      Receive Buffers must be at least 4096, Send Buffers at least 2048.
+
+  # =========================================================================
+  # Mellanox ConnectX (generic fallback for non-ARAMIS-24M products)
+  #
+  # For ARAMIS 12M/4M/SRX and other systems using Mellanox, the minimum
+  # requirements are flow control disabled and jumbo frames enabled.
+  # =========================================================================
+  mellanox_generic:
+    match:
+      - "ConnectX"
+      - "Mellanox.*ConnectX"
+      - "mlx5"
+    expected_properties:
+      "FlowControl": "0"                        # Disabled
+      "JumboPacket": ">=9000"                    # Jumbo frames
+      "ReceiveBuffers": ">=4096"
+    violation_severity: WARNING
+    recommendation: >
+      Mellanox ConnectX adapters for camera connections: Flow Control must
+      be Disabled and Jumbo Frames enabled (9000+).
+
+  # =========================================================================
+  # ARAMIS 12M / 4M / USB systems: Intel I210-T1 (controller connection)
+  #
+  # Source: Trilion field experience
+  # These systems connect to a controller over GigE. The critical settings
+  # are: Flow Control Disabled, static IP (192.168.6.1), jumbo frames max.
+  # =========================================================================
+  intel_controller:
+    match:
+      - "I210-T1"
+      - "Intel.*I210"
+      - "Intel.*Ethernet Server Adapter I210"
+    expected_properties:
+      "FlowControl": "0"                        # Disabled
+      "JumboPacket": ">=9014"                    # Maximum jumbo value
+      "ReceiveBuffers": ">=2048"
+    violation_severity: WARNING
+    recommendation: >
+      Intel I210-T1 controller NIC: Flow Control must be Disabled, Jumbo
+      Packet at maximum value (9014+), and Receive Buffers >= 2048.
+      The adapter must have a static IP on the controller subnet
+      (typically 192.168.6.1 for a 192.168.6.200 controller).
+
+  # =========================================================================
+  # ARAMIS SRX: Intel X550-T2 (10 GbE camera connection)
+  #
+  # Source: preliminary -- flow control and jumbo only confirmed
+  # =========================================================================
+  intel_10gbe_camera:
+    match:
+      - "X550"
+      - "Intel.*X550"
+      - "Intel.*10G"
+    required_for:
+      - "ARAMIS SRX"
+    expected_properties:
+      "FlowControl": "0"                        # Disabled
+      "JumboPacket": ">=9014"                    # Maximum jumbo value
+    violation_severity: WARNING
+    recommendation: >
+      Intel X550-T2 for ARAMIS SRX: Flow Control must be Disabled and
+      Jumbo Packet at maximum value. Additional settings are preliminary
+      and may need refinement based on field experience.
+
+  # =========================================================================
+  # Management NIC (Intel I219-LM, etc.) -- no checks needed
+  # =========================================================================
+  intel_management:
+    match:
+      - "I219-LM"
+      - "Intel.*I219"
+      - "Intel.*Ethernet Connection.*I219"
+    expected_properties: {}
+    violation_severity: INFO
+    recommendation: >
+      Intel I219-LM is the management/corporate network adapter.
+      Default settings are acceptable.

@@ -1,0 +1,437 @@
+# Known error patterns for GOMSic Parser
+# Each pattern is matched against log content and parsed data.
+#
+# Format:
+#   id: unique identifier
+#   regex: regular expression to match (Python re syntax)
+#   severity: CRITICAL | WARNING | INFO
+#   title: human-readable title
+#   description: what this means
+#   recommendation: what to do about it
+#   category: network | driver | license | log | system
+
+patterns:
+  - id: controller_subnet_mismatch
+    regex: "(?:192\\.168\\.\\d+\\.200).*(?:unreachable|timeout|not reachable|no route)"
+    severity: CRITICAL
+    title: Controller subnet mismatch
+    description: >
+      The sensor controller IP (typically 192.168.x.200) is unreachable.
+      This usually means the workstation NIC connected to the controller
+      is on a different subnet.
+    recommendation: >
+      Verify the controller NIC IP address is on the same subnet as the
+      controller (e.g., 192.168.x.1 for a 192.168.x.200 controller).
+    category: network
+
+  - id: license_parse_error
+    regex: "Error parsing license string"
+    severity: INFO
+    title: License string parsing error
+    description: >
+      The application encountered an error parsing a license string.
+      This may indicate a corrupted or incompatible license file.
+    recommendation: >
+      Check license file integrity. Re-download license if needed.
+    category: license
+
+  - id: camera_timeout
+    regex: "(?:camera|Camera).*(?:timeout|Timeout|TIMEOUT)"
+    severity: WARNING
+    title: Camera communication timeout
+    description: >
+      A timeout occurred during camera communication. This can be caused
+      by network configuration issues, packet size mismatches, or NIC
+      driver problems.
+    recommendation: >
+      Check NIC settings (jumbo frames, offloads), cable connections,
+      and switch configuration.
+    category: network
+
+  - id: hal_connection_failure
+    regex: "HAL.*(?:connection failed|connect error|cannot connect)"
+    severity: CRITICAL
+    title: Hardware Abstraction Layer connection failure
+    description: >
+      The ZEISS Hardware Abstraction Layer could not connect to the
+      sensor hardware. This prevents all measurement operations.
+    recommendation: >
+      Verify Hardware Service is running. Check USB/network connections
+      to the sensor. Restart Hardware Service if needed.
+    category: system
+
+  - id: gev_packet_size_intermediate
+    regex: "GevSCPSPacketSize\\s*=\\s*(?!1500|9000|8228)\\d{4,}"
+    severity: INFO
+    title: GigE Vision packet size is non-standard
+    description: >
+      The GevSCPSPacketSize is set to an intermediate value (not 1500
+      for standard frames or 9000+ for jumbo frames). This may indicate
+      auto-negotiation or a misconfigured MTU.
+    recommendation: >
+      Verify jumbo frames are enabled on both the NIC and switch.
+      Expected packet size for jumbo frames is 8228 or 9000.
+    category: network
+
+  - id: windows_kb5074105
+    regex: "KB5074105|KB5077181"
+    severity: WARNING
+    title: Known Windows update compatibility issue
+    description: >
+      Windows updates KB5074105 or KB5077181 have been reported to cause
+      compatibility issues with ZEISS INSPECT.
+    recommendation: >
+      Check ZEISS support documentation for the latest compatibility
+      guidance. Consider uninstalling the problematic update if issues
+      are observed.
+    category: system
+
+  - id: acquisition_error_generic
+    regex: "acquisition.*error|error.*acquisition"
+    severity: WARNING
+    title: Acquisition error detected
+    description: >
+      An error was logged during the acquisition process.
+    recommendation: >
+      Review the full acquisition log for details. Check camera
+      connections and NIC configuration.
+    category: log
+
+  # --- Hardware Service / HAL patterns ---
+
+  - id: grpc_port_blocked
+    regex: "gRPC server port already blocked"
+    severity: CRITICAL
+    title: Hardware Service gRPC port blocked
+    description: >
+      The ZEISS Hardware Service (HAL) could not start its gRPC interface
+      because the port (typically 39002) is already in use. This usually
+      means a previous HAL instance did not shut down cleanly. ZEISS INSPECT
+      will hang at "Connecting to hardware servers" while this persists.
+    recommendation: >
+      Kill any stale ZEISS_INSPECT_HardwareService.exe processes in Task
+      Manager, or reboot the workstation. Then restart ZEISS INSPECT.
+    category: system
+
+  - id: fg_0004_connection_lost
+    regex: "Error FG-0004.*connection to the image acquisition server was lost"
+    severity: CRITICAL
+    title: FG-0004 - Connection to acquisition server lost
+    description: >
+      The frame grabber lost its connection to the image acquisition server.
+      This can be caused by network errors, NIC driver issues, or the
+      acquisition server crashing.
+    recommendation: >
+      Check NIC settings, cable connections, and Mellanox driver status.
+      Review the GOM-HAL log for the preceding error. A restart of ZEISS
+      INSPECT or reboot may be needed.
+    category: system
+
+  - id: fg_g003_sensor_not_connected
+    regex: "Error FG-G003.*sensor which is not connected"
+    severity: CRITICAL
+    title: FG-G003 - Configured sensor not connected
+    description: >
+      The application configuration references a sensor that is not
+      physically connected or reachable on the network. The Hardware
+      Service cannot initialize the measurement device.
+    recommendation: >
+      Run "Analyze ATOS Sensor" or "Correct System" in ZEISS INSPECT to
+      re-detect hardware. Verify sensor power, cable connections, and
+      network configuration.
+    category: system
+
+  - id: haldata_0002_config_error
+    regex: "Error HALDATA-0002.*configuration import error"
+    severity: WARNING
+    title: HALDATA-0002 - Hardware configuration import error
+    description: >
+      The Hardware Service could not open or import its configuration file.
+      This occurs on fresh installations or when the config at
+      C:/ProgramData/Zeiss/HardwareServer/ is missing or corrupt.
+    recommendation: >
+      Run "Correct System" in ZEISS INSPECT to regenerate the hardware
+      configuration. If the problem persists, delete the contents of
+      C:/ProgramData/Zeiss/HardwareServer/ and restart.
+    category: system
+
+  - id: hardware_spec_incomplete
+    regex: "hardware specification is incomplete"
+    severity: CRITICAL
+    title: Hardware specification incomplete
+    description: >
+      The Hardware Service reports that the hardware specification is
+      incomplete -- it cannot determine which NIC/interface to use for
+      the sensor connection.
+    recommendation: >
+      Run "Analyze ATOS Sensor" or "Correct System" to re-detect and
+      assign the correct network interface.
+    category: system
+
+  - id: ethernet_interface_not_found
+    regex: "Cannot find the required Ethernet interface"
+    severity: CRITICAL
+    title: Required Ethernet interface not found
+    description: >
+      The frame grabber cannot find the network interface needed for
+      camera communication. The interface address in the configuration
+      may be empty or the NIC may be disconnected.
+    recommendation: >
+      Check that all NICs are connected and have valid IP addresses.
+      Run "Correct System" in ZEISS INSPECT.
+    category: system
+
+  - id: websocket_dead
+    regex: "Cannot close WebSocket connection cause it is already dead"
+    severity: WARNING
+    title: Hardware Service WebSocket connection died
+    description: >
+      The Hardware Service management WebSocket connection dropped
+      unexpectedly. This may indicate the web interface or a client
+      disconnected abnormally.
+    recommendation: >
+      Usually recovers on reconnection. If persistent, restart the
+      Hardware Service.
+    category: system
+
+  - id: qzs_server_unreachable
+    regex: "No such host is known.*zqs-server\\.zeiss\\.com"
+    severity: INFO
+    title: ZEISS Quality Suite cloud server unreachable
+    description: >
+      The workstation cannot reach zqs-server.zeiss.com. This is expected
+      on air-gapped or offline systems and does not affect measurement
+      functionality.
+    recommendation: >
+      No action needed for offline systems. If cloud features are required,
+      check internet/proxy settings.
+    category: system
+
+  - id: support_data_export_failed
+    regex: "Error creating zip file for collecting support data"
+    severity: WARNING
+    title: Failed to create support data archive
+    description: >
+      The Quality Suite could not create the support data ZIP file. This
+      usually means the target directory does not exist (e.g., a USB drive
+      was removed) or there are permission issues.
+    recommendation: >
+      Retry the support data collection with a valid output path.
+    category: system
+
+  # --- HAL structural checks (detected from parsed data, not regex) ---
+  # These pattern IDs are referenced by the HAL detection pass in detector.py.
+  # They do not use regex -- they are matched programmatically.
+
+  - id: hal_service_not_running
+    regex: "__structural__"
+    severity: CRITICAL
+    title: Hardware Service not running
+    description: >
+      The ZEISS Hardware Service (ZEISS_INSPECT_HardwareService.exe) was
+      not found in the process list. Without the Hardware Service, ZEISS
+      INSPECT cannot communicate with measurement hardware.
+    recommendation: >
+      Start the Hardware Service from Windows Services (services.msc) or
+      reinstall via the ZEISS Quality Suite installer. Ensure the service
+      is set to Automatic startup. Check Windows Firewall rules for
+      zeiss_inspect_hardwareserver.exe and zeiss_inspect_hardwareservice.exe.
+    category: hal
+
+  - id: hal_grpc_not_started
+    regex: "__structural__"
+    severity: WARNING
+    title: HAL gRPC interface never started
+    description: >
+      The Hardware Service gRPC interface was not detected as listening or
+      blocked. This means the HAL process may have failed during startup
+      before reaching the gRPC initialization stage.
+    recommendation: >
+      Check the GOM-HAL log for startup errors. Ensure .NET Runtime 8.0+
+      and Visual C++ 2015-2022 Redistributable (x64) are installed.
+      Try reinstalling the Hardware Service and running "Correct System"
+      in ZEISS INSPECT.
+    category: hal
+
+  - id: hal_empty_config
+    regex: "__structural__"
+    severity: WARNING
+    title: Hardware configuration is empty
+    description: >
+      The hardware_cfg.xml file at C:/ProgramData/Zeiss/HardwareServer/
+      contains no device configuration. This typically occurs on fresh
+      installations or after a failed "Correct System" operation.
+    recommendation: >
+      In ZEISS INSPECT, run "Correct System" from the Measuring Device
+      Manager (MDM) to regenerate the hardware configuration. If the MDM
+      web interface is not accessible, check that port 39025 is not blocked
+      by the firewall.
+    category: hal
+
+  - id: hal_db_errors_present
+    regex: "__structural__"
+    severity: CRITICAL
+    title: Hardware errors recorded in database
+    description: >
+      The hardware_status.db error_list table contains error records.
+      These errors were logged by the Hardware Service during operation
+      and may indicate persistent hardware communication problems.
+    recommendation: >
+      Review the specific error codes in the Hardware Service section of
+      System Info. Common fixes include re-running "Correct System",
+      checking network cables, and verifying NIC configuration.
+    category: hal
+
+  - id: hal_missing_expected_ports
+    regex: "__structural__"
+    severity: WARNING
+    title: Expected HAL ports not detected
+    description: >
+      The Hardware Service did not report all expected ports (39000 Backend,
+      39002 gRPC). Some services may not have started successfully.
+    recommendation: >
+      Review the GOM-HAL log timeline for startup failures. Try restarting
+      the Hardware Service. Ensure firewall rules allow
+      zeiss_inspect_hardwareserver.exe and zeiss_inspect_hardwareservice.exe.
+    category: hal
+
+  - id: prerequisite_dotnet_missing
+    regex: "__structural__"
+    severity: CRITICAL
+    title: .NET Runtime not found or version too old
+    description: >
+      The required .NET Runtime was not detected in the installed software
+      list. ZEISS INSPECT 2025+ requires .NET Runtime 8.0 or newer for
+      the Hardware Service and Quality Suite components.
+    recommendation: >
+      Install the .NET Runtime 8.0 (x64) from Microsoft. The ZEISS Quality
+      Suite installer should include this, but a manual install may be
+      needed if the installer was interrupted.
+    category: hal
+
+  - id: prerequisite_vcredist_missing
+    regex: "__structural__"
+    severity: WARNING
+    title: Visual C++ 2015-2022 Redistributable (x64) not found
+    description: >
+      The Microsoft Visual C++ 2015-2022 Redistributable (x64) was not
+      detected in the installed software list. This runtime is required
+      by several ZEISS components including the Hardware Service.
+    recommendation: >
+      Download and install the latest Visual C++ Redistributable (x64)
+      from Microsoft (https://aka.ms/vs/17/release/vc_redist.x64.exe).
+    category: hal
+
+  - id: hal_multiple_instances
+    regex: "__structural__"
+    severity: CRITICAL
+    title: Multiple Hardware Service instances running
+    description: >
+      More than one ZEISS_INSPECT_HardwareService.exe process was found
+      in the task list. This typically means a previous instance did not
+      shut down cleanly and is holding ports (especially gRPC 39002).
+    recommendation: >
+      Kill all ZEISS_INSPECT_HardwareService.exe processes in Task Manager,
+      then restart the service. Consider rebooting if the problem persists.
+    category: hal
+
+  - id: hal_service_not_automatic
+    regex: "__structural__"
+    severity: WARNING
+    title: Hardware Service startup type is not Automatic
+    description: >
+      The ZEISS Hardware Service Windows service is set to Manual or
+      Disabled startup. It will not start automatically after a reboot.
+    recommendation: >
+      Set the service to Automatic in services.msc or run:
+      sc config "ZeissInspectHardwareService" start=auto
+    category: hal
+
+  - id: hal_restart_cycle
+    regex: "__structural__"
+    severity: WARNING
+    title: HAL restart cycle detected
+    description: >
+      Multiple HAL startup events were detected in a single log file,
+      indicating the Hardware Service crashed and restarted during the
+      session.
+    recommendation: >
+      Review the GOM-HAL log for errors preceding each restart. Check
+      memory usage and system event logs for crash reports.
+    category: hal
+
+  - id: problem_device_detected
+    regex: "__structural__"
+    severity: WARNING
+    title: Windows Problem Device detected
+    description: >
+      Windows Device Manager reports one or more devices with error codes.
+      These devices may not be functioning correctly.
+    recommendation: >
+      Open Device Manager and resolve the flagged devices. Common fixes
+      include driver reinstallation or hardware reconnection.
+    category: system
+
+  - id: nic_disconnected
+    regex: "__structural__"
+    severity: CRITICAL
+    title: Network adapter disconnected
+    description: >
+      A network adapter shows as disconnected in the netsh interface table.
+      If this is a camera or controller NIC, no measurement is possible.
+    recommendation: >
+      Check the physical cable connection. Verify the NIC is enabled in
+      Network Connections.
+    category: network
+
+  - id: disk_space_low
+    regex: "__structural__"
+    severity: WARNING
+    title: Low disk space on system drive
+    description: >
+      The system drive has less than 5 GB free space. Low disk space can
+      cause ZEISS log rotation failures, HAL startup errors, and project
+      save failures.
+    recommendation: >
+      Free up disk space by clearing temporary files, old ZEISS projects,
+      or Windows Update cleanup.
+    category: system
+
+  - id: rivermax_env_missing
+    regex: "__structural__"
+    severity: WARNING
+    title: Rivermax environment variables not found
+    description: >
+      RIVERMAX_LOG_LEVEL and/or MELLANOX_RINGBUFF_FACTOR environment
+      variables are not set. These are required for ARAMIS 24M streaming.
+    recommendation: >
+      Set RIVERMAX_LOG_LEVEL=6 and MELLANOX_RINGBUFF_FACTOR=18 in system
+      environment variables, then reboot.
+    category: system
+
+  - id: rivermax_license_missing
+    regex: "rivermax.*license.*not found|cannot.*open.*rivermax\\.lic"
+    severity: CRITICAL
+    title: Rivermax license file missing
+    description: >
+      The Rivermax license file (rivermax.lic) was not found at
+      C:\Program Files\Mellanox\Rivermax\lib\rivermax.lic. Without this
+      file, ARAMIS 24M streaming will fail.
+    recommendation: >
+      Contact ZEISS support for a replacement rivermax.lic file and place
+      it at the specified path.
+    category: system
+
+  - id: firmware_mismatch
+    regex: "firmware.*mismatch|incompatible.*firmware|firmware.*version.*expected"
+    severity: CRITICAL
+    title: Sensor firmware version mismatch
+    description: >
+      The Hardware Service detected a firmware version mismatch between
+      the expected and actual firmware on the sensor/controller. This
+      typically occurs after upgrading ZEISS INSPECT without updating
+      the controller firmware.
+    recommendation: >
+      Update the controller firmware via the ZEISS INSPECT firmware update
+      tool. Refer to the release notes for the compatible firmware version.
+    category: system

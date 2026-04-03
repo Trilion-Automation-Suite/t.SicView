@@ -1,0 +1,100 @@
+# Driver version requirements for ZEISS measurement systems
+#
+# Each driver entry has:
+#   match: regex to match the driver name in InstalledPrograms.log
+#   min_version: minimum required version (optional)
+#   required_for: list of ProductType values that require this driver
+#   severity: severity when requirement is not met
+#   description: explanation
+#   recommendation: what to do
+
+drivers:
+  mellanox:
+    match: "MLNX_WinOF2|Mellanox.*WinOF"
+    min_version: "3.10.50000"
+    required_for:
+      - "ARAMIS 24M"
+      - "ARAMIS 12M"
+      - "ARAMIS 4M"
+      - "ARAMIS SRX"
+    severity: WARNING
+    description: >
+      Mellanox WinOF-2 driver is required for ARAMIS systems using
+      ConnectX-5 network adapters for camera GigE connections.
+    recommendation: >
+      Install or update MLNX_WinOF2 to the latest version from the
+      NVIDIA/Mellanox support site.
+
+  rivermax:
+    match: "Rivermax"
+    required_for:
+      - "ARAMIS 24M"
+    severity: CRITICAL
+    description: >
+      NVIDIA Rivermax SDK is required for ARAMIS 24M high-speed
+      streaming. Without it, the system cannot acquire data.
+    recommendation: >
+      Install Rivermax SDK from NVIDIA. Ensure the version is compatible
+      with the installed Mellanox driver.
+
+  nvidia_gpu:
+    match: "NVIDIA.*Driver|NVIDIA.*Graphics"
+    severity: INFO
+    description: >
+      NVIDIA GPU driver. Check for known-good versions per GPU model.
+    recommendation: >
+      Use the NVIDIA driver version recommended by ZEISS for your
+      GPU model. Avoid beta drivers.
+
+  codemeter:
+    match: "CodeMeter"
+    min_version: "7.60"
+    severity: WARNING
+    description: >
+      WIBU CodeMeter runtime is required for ZEISS license management.
+      Version 7.60+ is required for ZEISS INSPECT 2023 SP5 and later.
+    recommendation: >
+      Update CodeMeter runtime to the latest version.
+
+  dotnet_runtime:
+    match: "\\.NET Runtime|\\.NET Desktop Runtime"
+    min_version: "8.0.10"
+    severity: CRITICAL
+    description: >
+      .NET Runtime 8.0+ is required by the ZEISS Hardware Service and
+      Quality Suite components in ZEISS INSPECT 2025 and later.
+    recommendation: >
+      Install .NET Runtime 8.0 (x64) from Microsoft. The ZEISS Quality
+      Suite installer should include this prerequisite.
+
+  vcredist:
+    match: "Visual C\\+\\+.*Redistributable.*x64"
+    severity: WARNING
+    description: >
+      Microsoft Visual C++ 2015-2022 Redistributable (x64) is required
+      by the Hardware Service and other native ZEISS components.
+    recommendation: >
+      Download and install the latest Visual C++ Redistributable (x64)
+      from Microsoft.
+
+  common_vision_blox:
+    match: "Common Vision Blox"
+    min_version: "14.01.006"
+    severity: WARNING
+    description: >
+      Common Vision Blox (CVB) is the image acquisition driver used by
+      all ZEISS INSPECT optical measurement systems.
+    recommendation: >
+      Install the CVB version specified in the ZEISS release notes.
+
+  emergent_camera:
+    match: "Emergent|eCapture"
+    min_version: "2.44.02"
+    required_for:
+      - "ARAMIS 24M"
+    severity: WARNING
+    description: >
+      Emergent camera driver for ARAMIS 24M high-resolution cameras.
+    recommendation: >
+      Install the Emergent camera driver from the ZEISS installer media.
+      Note: upgrading from 2.36.02 to 2.44.02 requires uninstall first.

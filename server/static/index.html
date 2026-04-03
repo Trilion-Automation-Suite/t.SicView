@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOMSic Parser</title>
+<style>
+/* Trilion brand: #25283d #646464 #ddd1c7 #aa1e1e #cc0000 */
+:root, [data-theme="dark"] {
+  --bg: #25283d; --surface: #2e3150; --surface2: #292c42;
+  --text: #ddd1c7; --muted: #8a8a8a; --bright: #f0ebe6;
+  --accent: #cc0000; --accent-hover: #aa1e1e; --accent-soft: rgba(204,0,0,0.12);
+  --success: #4caf50; --warn: #e0a030; --error: #cc0000; --info: #6b9bd2;
+  --border: #3d4060; --radius: 8px;
+  --logo-variant: "dark";
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --bg: #f5f0ec; --surface: #ffffff; --surface2: #ede7e1;
+  --text: #25283d; --muted: #646464; --bright: #1a1a2e;
+  --accent: #cc0000; --accent-hover: #aa1e1e; --accent-soft: rgba(204,0,0,0.08);
+  --success: #2e7d32; --warn: #c07800; --error: #cc0000; --info: #1565c0;
+  --border: #d0c8c0; --radius: 8px;
+  --logo-variant: "light";
+  color-scheme: light;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+}
+header {
+  width: 100%; padding: 0.6rem 2rem; background: var(--surface);
+  border-bottom: 2px solid var(--accent); display: flex;
+  align-items: center; gap: 0.8rem;
+}
+header h1 { font-size: 1.3rem; font-weight: 600; }
+.header-logo { height: 28px; margin-right: 0.3rem; }
+.header-spacer { flex: 1; }
+.badge {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
+  background: var(--accent); color: #fff; font-weight: 600;
+}
+.beta { background: var(--warn); color: #25283d; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); cursor: pointer; font-size: 1rem; padding: 0.3rem 0.6rem;
+  transition: border-color 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+.export-btn {
+  padding: 0.4rem 0.8rem; background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.75rem;
+  cursor: pointer; font-weight: 500; transition: border-color 0.2s;
+}
+.export-btn:hover { border-color: var(--accent); color: var(--accent); }
+main { width: 100%; max-width: 1100px; padding: 1.5rem 2rem; }
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 2rem; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s; margin-bottom: 1rem;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent); background: rgba(0,102,204,0.05);
+}
+.upload-zone h2 { font-size: 1rem; margin-bottom: 0.3rem; }
+.upload-zone p { color: var(--muted); font-size: 0.8rem; }
+.upload-zone .filename { color: var(--success); font-weight: 500; margin-top: 0.3rem; }
+
+/* Form -- product, description, and parse button on one row */
+.form-row { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; }
+.form-row > * { flex: 1; display: flex; flex-direction: column; }
+.form-row .btn-wrap { flex: 0 0 auto; display: flex; align-items: flex-end; }
+label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.2rem; }
+select, textarea, input {
+  width: 100%; padding: 0.5rem 0.7rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font-size: 0.85rem; font-family: inherit;
+  height: 2.25rem;
+}
+textarea { resize: none; overflow: hidden; }
+textarea[readonly] { opacity: 0.7; cursor: default; }
+button {
+  padding: 0.5rem 1.8rem; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius); font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: background 0.2s; white-space: nowrap;
+  height: 2.25rem;
+}
+button:hover { background: var(--accent-hover); }
+button:disabled { background: var(--muted); cursor: not-allowed; }
+#status { margin-top: 0.8rem; font-size: 0.8rem; color: var(--muted); }
+
+/* Compact mode after parse */
+body.parsed header { padding: 0.3rem 2rem; }
+body.parsed header h1 { font-size: 1rem; }
+body.parsed .header-logo { height: 20px; }
+body.parsed .upload-zone {
+  padding: 0.5rem 1rem; border-style: solid; border-width: 1px;
+  display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem;
+}
+body.parsed .upload-zone h2 { font-size: 0.8rem; margin: 0; display: none; }
+body.parsed .upload-zone p { display: none; }
+body.parsed .upload-zone .filename { margin: 0; font-size: 0.8rem; }
+body.parsed .upload-zone .compact-label,
+body.parsed .upload-zone .compact-hint { display: inline !important; }
+body.parsed .form-row { margin-bottom: 0.6rem; gap: 0.6rem; }
+body.parsed main { padding-top: 0.8rem; }
+
+/* Results container */
+#results { margin-top: 1.5rem; }
+.empty-state { padding: 3rem 2rem; text-align: center; color: var(--muted); font-size: 0.9rem; width: 100%; }
+
+/* Section headers */
+.section-header {
+  font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.7rem;
+  padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+}
+.section-header:first-child { margin-top: 0; }
+
+/* Input summary */
+.input-summary {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.8rem 1rem; margin-bottom: 1rem;
+  font-size: 0.8rem; color: var(--muted);
+}
+.input-summary span { color: var(--text); font-weight: 500; }
+
+/* System info grid */
+/* System info grid: equal-width columns, responsive via breakpoints */
+.grid {
+  display: grid; gap: 0.5rem;
+  grid-template-columns: repeat(5, 1fr);
+}
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 650px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.6rem 0.8rem;
+  min-height: 3.8rem; display: flex; flex-direction: column; justify-content: flex-start;
+}
+.card-title {
+  font-size: 0.6rem; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.05em; line-height: 1.2;
+}
+.card-value {
+  font-size: 0.9rem; font-weight: 500; margin-top: 0.15rem;
+  word-break: break-word;
+}
+.card-value[title] { cursor: help; }
+.card-sub {
+  font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem;
+  line-height: 1.35; word-break: break-word;
+  /* Allow wrapping on multiple lines for longer info */
+}
+
+/* Software table */
+.sw-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.3rem; }
+.sw-table th {
+  text-align: left; padding: 0.4rem 0.6rem; background: var(--surface);
+  border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+}
+.sw-table td { padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--surface2); }
+.sw-table tr:hover { background: var(--surface2); }
+
+/* NIC adapter group */
+.nic-group {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem; margin-bottom: 0.8rem;
+}
+.nic-group-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.6rem;
+}
+.nic-group-title { font-weight: 600; font-size: 0.95rem; }
+.nic-group-desc { font-size: 0.8rem; color: var(--muted); }
+.nic-status { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.nic-status.ok { background: rgba(158,206,106,0.15); color: var(--success); }
+.nic-status.warn { background: rgba(224,175,104,0.15); color: var(--warn); }
+.nic-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.nic-table th {
+  text-align: left; padding: 0.3rem 0.5rem; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.nic-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--surface2); }
+.nic-table .bad { color: var(--error); font-weight: 600; }
+.nic-table .good { color: var(--success); }
+.nic-ips { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+
+/* Fix command */
+.fix-cmd {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.6rem 0.8rem; margin-top: 0.5rem; font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;
+  position: relative; color: var(--success);
+}
+.fix-cmd-label {
+  font-size: 0.65rem; color: var(--muted); margin-bottom: 0.2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+.copy-btn {
+  position: absolute; top: 0.4rem; right: 0.4rem; font-size: 0.65rem;
+  padding: 2px 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--muted); cursor: pointer;
+}
+.copy-btn:hover { color: var(--text); border-color: var(--accent); background: var(--accent); }
+
+/* Findings */
+.finding {
+  padding: 0.6rem 0.8rem; border-left: 3px solid; border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 0.4rem; background: var(--surface);
+}
+.finding.CRITICAL { border-color: var(--error); }
+.finding.WARNING { border-color: var(--warn); }
+.finding.INFO { border-color: var(--info); }
+.finding-title { font-weight: 600; font-size: 0.85rem; }
+.severity-CRITICAL { color: var(--error); }
+.severity-WARNING { color: var(--warn); }
+.severity-INFO { color: var(--info); }
+.finding-desc { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+.finding-rec { font-size: 0.78rem; color: var(--success); margin-top: 0.15rem; }
+
+/* Licensing table */
+.lic-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 0.3rem; }
+.lic-table th {
+  text-align: left; padding: 0.3rem 0.5rem; font-size: 0.7rem;
+  text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border);
+}
+.lic-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--surface2); }
+
+/* Tab navigation */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1rem; }
+.tab {
+  padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s; user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-color: var(--accent); }
+.tab-count {
+  font-size: 0.7rem; padding: 1px 6px; border-radius: 8px; margin-left: 0.3rem;
+  font-weight: 600;
+}
+.tab-count.issues { background: rgba(247,118,142,0.15); color: var(--error); }
+.tab-count.verified { background: rgba(158,206,106,0.15); color: var(--success); }
+.tab-panel { display: none; }
+.tab-panel.active { display: flex; gap: 0; }
+
+/* Panel sidebar navigation */
+.panel-sidebar {
+  width: 180px; min-width: 180px; position: sticky; top: 0; align-self: flex-start;
+  border-right: 1px solid var(--border); padding: 0.3rem 0; margin-right: 1rem;
+  max-height: calc(100vh - 160px); overflow-y: auto; font-size: 0.75rem;
+}
+.panel-sidebar a {
+  display: block; padding: 0.3rem 0.7rem; color: var(--muted); text-decoration: none;
+  border-left: 2px solid transparent; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; transition: color 0.15s, border-color 0.15s;
+}
+.panel-sidebar a:hover { color: var(--text); background: var(--accent-soft); }
+.panel-sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.panel-content { flex: 1; min-width: 0; }
+@media (max-width: 750px) { .panel-sidebar { display: none; } }
+
+/* Verified checks */
+.verified-item {
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.4rem 0;
+  border-bottom: 1px solid var(--surface2); font-size: 0.82rem;
+}
+.verified-icon { color: var(--success); font-weight: bold; flex-shrink: 0; margin-top: 1px; }
+.verified-title { font-weight: 500; }
+.verified-detail { color: var(--muted); font-size: 0.75rem; }
+.verified-source { color: var(--muted); font-size: 0.68rem; font-style: italic; }
+.verified-category {
+  font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; font-weight: 600;
+  background: var(--surface); color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.03em; flex-shrink: 0;
+}
+
+/* Debug trace */
+.trace { font-size: 0.75rem; color: var(--muted); }
+.trace-ok { color: var(--success); }
+.trace-fail { color: var(--error); }
+.trace-skip { color: var(--muted); }
+
+/* Collapsible */
+details { margin-bottom: 0.5rem; }
+summary {
+  cursor: pointer; font-size: 0.85rem; font-weight: 500; padding: 0.3rem 0;
+  color: var(--text); user-select: none;
+}
+summary:hover { color: var(--accent); }
+
+footer {
+  margin-top: auto; padding: 1.2rem; text-align: center;
+  font-size: 0.7rem; color: var(--muted);
+}
+
+/* Log viewer modal */
+.log-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 1000; display: flex;
+  align-items: center; justify-content: center;
+}
+.log-modal {
+  background: var(--surface); border-radius: var(--radius); width: 90vw; max-width: 1200px;
+  height: 80vh; display: flex; flex-direction: column; border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.log-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.6rem 1rem; border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: 0.9rem;
+}
+.log-modal-actions { display: flex; gap: 0.4rem; }
+.log-modal-actions button {
+  padding: 0.3rem 0.7rem; font-size: 0.75rem; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  cursor: pointer;
+}
+.log-modal-actions button:hover { background: var(--accent); color: #fff; }
+.log-modal-body {
+  flex: 1; overflow: auto; padding: 0.5rem 1rem;
+}
+.log-modal-body pre {
+  margin: 0; font-size: 0.72rem; line-height: 1.5; white-space: pre-wrap;
+  word-break: break-all; color: var(--text);
+}
+/* Log file table */
+.log-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.3rem; table-layout: fixed; }
+.log-table th { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 0.72rem; }
+.log-table td { padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.log-table th:nth-child(1) { width: auto; }
+.log-table th:nth-child(2) { width: 60px; }
+.log-table th:nth-child(3) { width: 50px; }
+.log-table th:nth-child(4) { width: 30px; }
+.log-table th:nth-child(5) { width: 80px; }
+.log-table .log-pdf-checkbox { width: 13px; height: 13px; cursor: pointer; }
+.log-table .log-badge { display: inline-block; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; }
+.log-badge-err { background: rgba(204,0,0,0.15); color: var(--error); }
+.log-badge-warn { background: rgba(255,152,0,0.15); color: #c07800; }
+.log-open-btn {
+  padding: 0.2rem 0.5rem; font-size: 0.72rem; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  cursor: pointer;
+}
+.log-open-btn:hover { background: var(--accent); color: #fff; }
+.log-expand-btn {
+  padding: 0.15rem 0.4rem; font-size: 0.65rem; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+  cursor: pointer; line-height: 1;
+}
+.log-expand-btn:hover { background: var(--accent); color: #fff; }
+.timeline-filter.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Cmd+K Search Palette */
+.search-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 2000; display: flex;
+  align-items: flex-start; justify-content: center; padding-top: 15vh;
+}
+.search-palette {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  width: 90vw; max-width: 600px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.search-input {
+  width: 100%; padding: 0.8rem 1rem; background: var(--surface); border: none;
+  border-bottom: 1px solid var(--border); color: var(--text); font-size: 1rem;
+  outline: none;
+}
+.search-results {
+  max-height: 50vh; overflow-y: auto; padding: 0.3rem 0;
+}
+.search-result {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1rem;
+  cursor: pointer; font-size: 0.85rem; border-left: 3px solid transparent;
+}
+.search-result:hover, .search-result.active {
+  background: var(--accent-soft); border-left-color: var(--accent);
+}
+.search-result-type {
+  font-size: 0.6rem; text-transform: uppercase; color: var(--muted);
+  background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 3px;
+  white-space: nowrap;
+}
+.search-result-text { flex: 1; }
+.search-result-sub { font-size: 0.7rem; color: var(--muted); }
+.search-hint {
+  padding: 0.4rem 1rem; font-size: 0.7rem; color: var(--muted);
+  border-top: 1px solid var(--border); text-align: center;
+}
+
+/* Print / PDF export */
+@media print {
+  body { background: #fff; color: #222; }
+  header, .upload-zone, .form-row, button, #status, .tabs,
+  .theme-toggle, .export-btn, .copy-btn, footer, .input-summary { display: none !important; }
+  .tab-panel { display: block !important; page-break-inside: avoid; }
+  .panel-sidebar { display: none !important; }
+  .panel-content { width: 100%; }
+  .section-header { page-break-after: avoid; }
+  .nic-group, .card, .finding { page-break-inside: avoid; }
+  main { max-width: 100%; padding: 0; }
+  #results { display: block !important; }
+  .input-summary { background: #f5f5f5; border: 1px solid #ccc; color: #333; }
+  .input-summary span { color: #111; }
+  .card { background: #fafafa; border: 1px solid #ddd; }
+  .card-title { color: #666; }
+  .sw-table th, .nic-table th, .lic-table th { background: #f0f0f0; color: #444; }
+  .sw-table td, .nic-table td, .lic-table td { border-color: #ddd; }
+  .nic-group { background: #fafafa; border-color: #ddd; }
+  .finding { background: #fafafa; }
+  .fix-cmd { background: #f5f5f5; border-color: #ddd; color: #2e7d32; }
+  .verified-icon { color: #2e7d32; }
+  .severity-CRITICAL, .nic-table .bad { color: #cc0000; }
+  .severity-WARNING { color: #c07800; }
+  .severity-INFO { color: #1565c0; }
+  .nic-table .good, .finding-rec { color: #2e7d32; }
+  .log-modal-overlay { display: none !important; }
+  .log-pdf-content { display: block !important; page-break-before: always; }
+  .log-pdf-content pre { font-size: 0.6rem; }
+}
+</style>
+</head>
+<body>
+<header>
+  <img id="header-logo" class="header-logo" alt="Trilion">
+  <h1>GOMSic Parser</h1>
+  <span class="badge" id="vbadge"></span>
+  <span class="badge beta">BETA</span>
+  <div class="header-spacer"></div>
+  <button class="export-btn" onclick="openSearch()" title="Ctrl+K / Cmd+K"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+  <button class="export-btn" id="exportpdf" style="display:none" onclick="exportPDF()" title="Export to PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="18"/><line x1="15" y1="15" x2="12" y2="18"/></svg></button>
+  <button class="theme-toggle" id="themetoggle" onclick="toggleTheme()" title="Toggle light/dark theme">&#9681;</button>
+</header>
+<main>
+  <div id="dropzone" class="upload-zone">
+    <h2>Drop archive here or click to select</h2>
+    <p>Accepts .zip (QSR report) or .tgz (raw gomsic)</p>
+    <span class="compact-label" style="display:none;font-size:0.75rem;color:var(--muted)">Archive:</span>
+    <div class="filename" id="filename"></div>
+    <span class="compact-hint" style="display:none;font-size:0.7rem;color:var(--muted);margin-left:auto">click to change</span>
+    <input type="file" id="fileinput" accept=".zip,.tgz,.tar.gz" hidden>
+  </div>
+  <div class="form-row">
+    <div>
+      <label for="product">Product Type</label>
+      <select id="product">
+        <option value="Unknown">Unknown / Auto-detect</option>
+        <option value="ATOS Q">ATOS Q</option>
+        <option value="GOM Scan 1">GOM Scan 1</option>
+        <option value="GOM Scan Ports">GOM Scan Ports</option>
+        <option value="T-SCAN">T-SCAN</option>
+        <option value="ATOS Q AWK">ATOS Q AWK</option>
+        <option value="ARAMIS 4M">ARAMIS 4M</option>
+        <option value="ARAMIS 12M">ARAMIS 12M</option>
+        <option value="ARAMIS 24M">ARAMIS 24M</option>
+        <option value="ARAMIS SRX">ARAMIS SRX</option>
+        <option value="ARGUS">ARGUS</option>
+      </select>
+    </div>
+    <div>
+      <label for="description">Issue Description (optional)</label>
+      <textarea id="description" placeholder="Describe the problem you're investigating..."></textarea>
+    </div>
+    <div class="btn-wrap">
+      <button id="parsebtn" disabled>Parse Archive</button>
+    </div>
+  </div>
+  <div id="status"></div>
+  <div id="results">
+    <div class="tabs">
+      <div class="tab active" data-tab="sysinfo">System Info</div>
+      <div class="tab" data-tab="issues">Issues</div>
+      <div class="tab" data-tab="verified">Verified</div>
+      <div class="tab" data-tab="timeline">Activity</div>
+      <div class="tab" data-tab="logs">Logs</div>
+      <div class="tab" data-tab="debug">Debug</div>
+    </div>
+    <div class="tab-panel active" id="panel-sysinfo">
+      <div class="panel-content"><div class="empty-state">Upload and parse an archive to see system diagnostics.</div></div>
+    </div>
+    <div class="tab-panel" id="panel-issues">
+      <div class="panel-content"><div class="empty-state">Issues will appear here after parsing.</div></div>
+    </div>
+    <div class="tab-panel" id="panel-verified">
+      <div class="panel-content"><div class="empty-state">Verified checks will appear here after parsing.</div></div>
+    </div>
+    <div class="tab-panel" id="panel-timeline">
+      <div class="panel-content"><div class="empty-state">Activity timeline will appear here after parsing.</div></div>
+    </div>
+    <div class="tab-panel" id="panel-logs">
+      <div class="panel-content"><div class="empty-state">Log files will appear here after parsing.</div></div>
+    </div>
+    <div class="tab-panel" id="panel-debug">
+      <div class="panel-content"><div class="empty-state">Parser trace will appear here after parsing.</div></div>
+    </div>
+  </div>
+</main>
+<footer>
+  GOMSic Parser | Trilion Quality Systems |
+  This tool is in active development. Submit feedback to devs@trilion.com
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const dropzone=$('dropzone'), fileinput=$('fileinput'),
+      parsebtn=$('parsebtn'), statusEl=$('status'), resultsEl=$('results');
+let selectedFile=null;
+let lastParseData=null;
+
+// Build sidebar navigation from section-header elements inside a panel
+function buildPanelSidebars(container){
+  container.querySelectorAll('.tab-panel').forEach(panel => {
+    const headers = panel.querySelectorAll('.panel-content .section-header');
+    if(headers.length < 2) return; // no sidebar needed for 0-1 sections
+    const sidebar = panel.querySelector('.panel-sidebar');
+    if(!sidebar) return;
+    sidebar.innerHTML = '';
+    headers.forEach((hdr, i) => {
+      const id = 'sec-' + panel.id + '-' + i;
+      hdr.id = id;
+      const a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = hdr.textContent;
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        // Scroll with offset to keep header visible
+        const y = hdr.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({top: y, behavior:'smooth'});
+        sidebar.querySelectorAll('a').forEach(x=>x.classList.remove('active'));
+        a.classList.add('active');
+      });
+      sidebar.appendChild(a);
+    });
+    // Highlight first by default
+    const first = sidebar.querySelector('a');
+    if(first) first.classList.add('active');
+  });
+}
+
+// Tab switching helper (used on initial empty tabs and after render)
+function wireTabSwitching(container){
+  container.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = container.querySelector('#panel-' + tab.dataset.tab);
+      if(panel) panel.classList.add('active');
+    });
+  });
+}
+// Wire initial empty-state tabs
+wireTabSwitching(resultsEl);
+
+// Theme
+function getTheme(){ return localStorage.getItem('gomsic-theme')||'dark'; }
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('gomsic-theme',t);
+  loadLogo(t);
+}
+function toggleTheme(){ applyTheme(getTheme()==='dark'?'light':'dark'); }
+applyTheme(getTheme());
+
+// Logo
+function loadLogo(theme){
+  const variant = theme==='dark'?'white':'dark';
+  fetch('/api/logo/'+variant).then(r=>r.json()).then(d=>{
+    if(d.data_uri) $('header-logo').src=d.data_uri;
+  }).catch(()=>{});
+}
+
+// Log viewer modal
+function openLogViewer(filename, content){
+  const overlay = document.createElement('div');
+  overlay.className = 'log-modal-overlay';
+  overlay.innerHTML = `<div class="log-modal">
+    <div class="log-modal-header">
+      <span>${h(filename)}</span>
+      <div class="log-modal-actions">
+        <button onclick="copyLogContent(this)">Copy to Clipboard</button>
+        <button onclick="saveLogContent(this, '${filename.replace(/'/g,"\\'")}')">Save as .txt</button>
+        <button onclick="this.closest('.log-modal-overlay').remove()">Close</button>
+      </div>
+    </div>
+    <div class="log-modal-body"><pre></pre></div>
+  </div>`;
+  // Set content via textContent to avoid HTML injection
+  overlay.querySelector('pre').textContent = content;
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+function copyLogContent(btn){
+  const pre = btn.closest('.log-modal').querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy to Clipboard',1500);
+  });
+}
+function saveLogContent(btn, filename){
+  const pre = btn.closest('.log-modal').querySelector('pre');
+  const blob = new Blob([pre.textContent], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// PDF export via browser print
+function exportPDF(){
+  if(!lastParseData) return;
+  // Build PDF-included log content sections
+  const pdfLogs = document.getElementById('pdf-log-content');
+  if(pdfLogs){
+    pdfLogs.innerHTML = '';
+    const checkboxes = resultsEl.querySelectorAll('.log-pdf-checkbox:checked');
+    const inv = lastParseData.log_inventory;
+    if(inv && checkboxes.length){
+      for(const cb of checkboxes){
+        const idx = parseInt(cb.dataset.logIdx);
+        const file = inv.files[idx];
+        if(file){
+          const div = document.createElement('div');
+          div.className = 'log-pdf-content';
+          div.style.display = 'none'; // shown by print CSS
+          div.innerHTML = `<div class="section-header">${h(file.filename)}</div><pre style="font-size:0.6rem;white-space:pre-wrap;word-break:break-all"></pre>`;
+          div.querySelector('pre').textContent = file.content || '(no content)';
+          pdfLogs.appendChild(div);
+        }
+      }
+    }
+  }
+  // Switch all tabs visible for print, then trigger print dialog
+  const panels = resultsEl.querySelectorAll('.tab-panel');
+  panels.forEach(p => p.style.display='block');
+  const tabs = resultsEl.querySelector('.tabs');
+  if(tabs) tabs.style.display='none';
+  window.print();
+  // Restore after print
+  setTimeout(()=>{
+    if(tabs) tabs.style.display='';
+    panels.forEach(p => p.style.display='');
+    resultsEl.querySelectorAll('.tab-panel.active').forEach(p => p.style.display='block');
+    panels.forEach(p => { if(!p.classList.contains('active')) p.style.display='none'; });
+  }, 500);
+}
+
+// Version badge
+fetch('/api/health').then(r=>r.json()).then(d=>{$('vbadge').textContent='v'+d.version});
+
+// Upload handlers
+dropzone.addEventListener('click',()=>fileinput.click());
+dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('dragover')});
+dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop',e=>{
+  e.preventDefault();dropzone.classList.remove('dragover');
+  if(e.dataTransfer.files.length)setFile(e.dataTransfer.files[0]);
+});
+fileinput.addEventListener('change',()=>{if(fileinput.files.length)setFile(fileinput.files[0])});
+
+function setFile(f){
+  selectedFile=f;
+  $('filename').textContent=f.name+' ('+Math.round(f.size/1024)+' KB)';
+  parsebtn.disabled=false;
+  parsebtn.style.display='';
+  $('description').readOnly=false;
+  // If re-selecting after a parse, keep compact mode but show button
+}
+
+parsebtn.addEventListener('click',async()=>{
+  if(!selectedFile)return;
+  parsebtn.disabled=true;
+  // Animated progress steps with counter
+  const steps = ['Extracting archive', 'Identifying system', 'Parsing versions', 'Parsing system info', 'Parsing licenses', 'Analyzing network', 'Analyzing drivers', 'Detecting cameras', 'Checking USB', 'Parsing HAL', 'Scanning logs', 'Checking CodeMeter', 'Parsing Windows events', 'Parsing config', 'Parsing QSS log', 'Checking updates', 'Detecting issues', 'Running verifications'];
+  let stepIdx = 0;
+  const totalSteps = steps.length;
+  statusEl.textContent = `[1/${totalSteps}] ${steps[0]}...`;
+  const progressInterval = setInterval(() => {
+    stepIdx++;
+    if(stepIdx < totalSteps) statusEl.textContent = `[${stepIdx+1}/${totalSteps}] ${steps[stepIdx]}...`;
+    else statusEl.textContent = 'Finalizing results...';
+  }, 800);
+  const fd=new FormData();
+  fd.append('file',selectedFile);
+  fd.append('product',$('product').value);
+  fd.append('description',$('description').value);
+  try{
+    const res=await fetch('/api/parse',{method:'POST',body:fd});
+    if(!res.ok){
+      clearInterval(progressInterval);
+      const errBody = await res.json().catch(()=>({detail:'Unknown error'}));
+      const detail = errBody.detail || 'Unknown error';
+      const tb = errBody.traceback || '';
+      statusEl.innerHTML='<div style="color:var(--error)">Error '+res.status+': '+h(detail)+'</div>'
+        +(tb?'<details style="margin-top:0.3rem"><summary style="font-size:0.75rem;color:var(--muted)">Traceback</summary><pre style="font-size:0.68rem;color:var(--muted);white-space:pre-wrap;max-height:300px;overflow:auto">'+h(tb)+'</pre></details>':'');
+      parsebtn.disabled=false;
+      return;
+    }
+    const data=await res.json();
+    clearInterval(progressInterval);
+    lastParseData=data;
+    renderResults(data);
+    $('exportpdf').style.display='';
+    $('description').readOnly=true;
+    parsebtn.style.display='none';
+    document.body.classList.add('parsed');
+    statusEl.textContent='Parse complete in '+(data.debug_trace?.total_duration_ms||0).toFixed(0)+'ms';
+  }catch(err){
+    clearInterval(progressInterval);
+    statusEl.textContent='Error: '+err.message;
+    parsebtn.disabled=false;
+  }
+});
+
+function h(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function buildAICopyBlock(d, allFindings, nicFindings, otherFindings){
+  // Build a plain-text summary an engineer can paste into any LLM chat
+  const si=d.system_info||{}, v=d.zeiss_versions||{}, drv=d.drivers||{}, gpu=drv.gpu||{};
+  const lic=d.licensing||{}, hs=d.hardware_service||{}, cam=d.cameras||{}, net=d.network||{};
+
+  let txt = `I need help diagnosing a ZEISS measurement system. Here is the parsed diagnostic report from a GOMSic archive.\n\n`;
+  txt += `## System\n`;
+  txt += `- Product: ${d.product_type||'Unknown'}${d.detected_product?' (auto-detected: '+d.detected_product+')':''}\n`;
+  txt += `- ZEISS INSPECT: ${v.inspect_version||'?'}\n`;
+  txt += `- Hardware Service: ${hs.version||v.hardware_service_version||'?'} | HAL: ${hs.hal_version||'?'}\n`;
+  txt += `- Quality Suite: ${v.quality_suite_version||'?'}\n`;
+  txt += `- Computer: ${si.computer_name||'?'} | OS: ${si.os_name||'?'}\n`;
+  txt += `- Model: ${si.system_model||'?'} | CPU: ${si.processor||'?'} | RAM: ${si.total_physical_memory||'?'}\n`;
+  txt += `- GPU: ${gpu.name||'?'} | Driver: ${gpu.driver_version||'?'} | CUDA: ${gpu.cuda_version||'?'}\n`;
+
+  // Drivers
+  const relevantDrv = drv.all_relevant_drivers||[];
+  if(relevantDrv.length){
+    txt += `\n## Key Software\n`;
+    for(const dr of relevantDrv) txt += `- ${dr.name}: ${dr.version||'?'} (installed ${dr.install_date||'?'})\n`;
+  }
+
+  // Licensing
+  if(lic.dongles?.length) txt += `\n## Dongle\n- ${lic.dongles[0].dongle_type}=${lic.dongles[0].serial}\n`;
+  if(lic.licenses?.length){
+    txt += `\n## Licenses\n`;
+    for(const l of lic.licenses){
+      const rf=l.raw_fields||{};
+      txt += `- ${l.product||'?'} | ${rf['License Name']||'?'} | v${l.version||'?'} | ${l.expiry||'?'}\n`;
+    }
+  }
+
+  // Hardware Service
+  if(hs.hal_version || hs.ports?.length){
+    txt += `\n## Hardware Service (HAL)\n`;
+    txt += `- gRPC status: ${hs.grpc_status||'?'}\n`;
+    if(hs.ports?.length) for(const p of hs.ports) txt += `- Port ${p.port} (${p.service}): ${p.status} ${p.address||''}\n`;
+    if(hs.timeline?.length){
+      txt += `- Timeline:\n`;
+      for(const ev of hs.timeline) txt += `  - ${ev}\n`;
+    }
+  }
+
+  // Network adapters
+  if(net.adapters?.length){
+    txt += `\n## Network Adapters\n`;
+    for(const a of net.adapters){
+      txt += `- ${a.name}: ${a.description||'?'} | IPs: ${a.ip_addresses?.join(', ')||'none'}\n`;
+    }
+  }
+
+  // Cameras/Controllers
+  if(cam.controllers?.length || cam.cameras?.length){
+    txt += `\n## Sensors\n`;
+    if(cam.controllers?.length) for(const c of cam.controllers)
+      txt += `- Controller: ${c.device_type||'?'} "${c.name||'?'}" at ${c.ip_address||'?'} (FW: ${c.firmware||'?'})\n`;
+    if(cam.cameras?.length) for(const c of cam.cameras)
+      txt += `- Camera: ${c.model||c.camera_name||'?'} serial ${c.serial_number||'?'}\n`;
+  }
+
+  // Findings (the main content)
+  if(allFindings.length){
+    txt += `\n## Issues Detected (${allFindings.length})\n`;
+    for(const f of allFindings){
+      txt += `- [${f.severity}] ${f.title}\n  ${f.description}\n`;
+      if(f.recommendation) txt += `  Recommendation: ${f.recommendation}\n`;
+    }
+  }
+
+  // User description
+  if(d.user_issue_description) txt += `\n## User's Issue Description\n${d.user_issue_description}\n`;
+  if(d.user_description) txt += `\n## Engineer's Note\n${d.user_description}\n`;
+
+  txt += `\n---\nPlease analyze these findings and suggest the most likely root cause and recommended actions.\n`;
+
+  // Render as a copyable block
+  let out = '<div class="section-header" style="margin-top:2rem">Copy for AI Assistant</div>';
+  out += '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.3rem">Copy this summary and paste it into any AI chat (ChatGPT, Claude, Gemini, etc.) for diagnostic help.</div>';
+  out += `<div class="fix-cmd" style="max-height:300px;overflow:auto;white-space:pre-wrap;font-size:0.72rem;line-height:1.4" onclick="navigator.clipboard.writeText(this.innerText.replace('Copy','').trim())">`;
+  out += `<span class="copy-btn">Copy</span>${h(txt)}</div>`;
+  return out;
+}
+
+function renderResults(d){
+  const si=d.system_info||{}, v=d.zeiss_versions||{}, drv=d.drivers||{}, gpu=drv.gpu||{}, lic=d.licensing||{};
+  const allFindings = d.findings||[];
+  const nicFindings = allFindings.filter(f=>f.category==='network');
+  const halFindings = allFindings.filter(f=>f.category==='hal');
+  const otherFindings = allFindings.filter(f=>f.category!=='network' && f.category!=='hal');
+  const verified = d.verified_checks||[];
+  const issueCount = allFindings.length;
+
+  // --- Input Summary ---
+  const userProduct = $('product').value;
+  const userDesc = $('description').value;
+  let html = `<div class="input-summary">
+    <strong>Input:</strong>
+    Archive: <span>${h(d.archive_filename)}</span> |
+    Selected product: <span>${h(userProduct)}</span>
+    ${d.detected_product ? ' | Auto-detected: <span>'+h(d.detected_product)+'</span>' : ''}
+    ${d.user_issue_description ? ' | Archive note: <span>"'+h(d.user_issue_description)+'"</span>' : ''}
+    ${userDesc ? ' | Your note: <span>"'+h(userDesc)+'"</span>' : ''}
+  </div>`;
+
+  // --- Tab Navigation ---
+  const logCount = (d.log_inventory?.files||[]).length;
+  html += `<div class="tabs">
+    <div class="tab active" data-tab="sysinfo">System Info</div>
+    <div class="tab" data-tab="issues">Issues <span class="tab-count issues">${issueCount}</span></div>
+    <div class="tab" data-tab="verified">Verified <span class="tab-count verified">${verified.length}</span></div>
+    <div class="tab" data-tab="timeline">Activity</div>
+    <div class="tab" data-tab="logs">Logs <span class="tab-count verified">${logCount}</span></div>
+    <div class="tab" data-tab="debug">Debug</div>
+  </div>`;
+
+  // ===================== PANEL 1: SYSTEM INFO =====================
+  html += '<div class="tab-panel active" id="panel-sysinfo"><nav class="panel-sidebar"></nav><div class="panel-content">';
+
+  // Find CVB and QZS from installed software
+  const allDrivers = drv.all_relevant_drivers || [];
+  const cvbDrv = allDrivers.find(d=>d.name && d.name.toLowerCase().includes('vision blox'));
+  const qzsDrv = allDrivers.find(d=>d.name && d.name.toLowerCase().includes('quality suite'));
+  const dongStr = (lic.dongles||[])[0]?.serial ? (lic.dongles[0].dongle_type||'')+'='+lic.dongles[0].serial : null;
+
+  const cm = d.codemeter || {};
+  const drives = cm.drives || [];
+
+  // Shorten CPU string: "Intel(R) Xeon(R) W-2235 CPU @ 3.80GHz, 3792 Mhz, 6 Core(s), 6 Logical Processor(s)"
+  // -> "Xeon W-2235 @ 3.80GHz (6C/6T)"
+  let cpuShort = si.processor || '';
+  const cpuFull = cpuShort;
+  const cpuM = cpuShort.match(/(?:Intel\(R\)\s+)?(?:Xeon\(R\)\s+|Core\(TM\)\s+)?(\S+(?:\s+\S+)?)\s+CPU\s+@\s+([\d.]+GHz).*?(\d+)\s+Core.*?(\d+)\s+Logical/i);
+  if(cpuM) cpuShort = `${cpuM[1]} @ ${cpuM[2]} (${cpuM[3]}C/${cpuM[4]}T)`;
+
+  // Shorten OS: "Microsoft Windows 10 Pro for Workstations" -> "Win 10 Pro Workstations"
+  let osShort = (si.os_name||'').replace('Microsoft Windows','Win').replace('for ','');
+  const osFull = si.os_name || '';
+
+  // Build card: title, main value, optional subtitle (shown as second line)
+  // Subtitle supports \n for explicit line breaks
+  function card(title,value,sub){
+    const showSub = sub && sub !== value;
+    const tt = showSub ? ` title="${h(sub).replace(/\n/g,' ')}"` : '';
+    let out = `<div class="card"><div class="card-title">${h(title)}</div><div class="card-value"${tt}>${h(value)}</div>`;
+    if(showSub) out += `<div class="card-sub">${h(sub).replace(/\n/g,'<br>')}</div>`;
+    return out + '</div>';
+  }
+
+  // Find Correlate version from installed software or product_name
+  const correlateDrv = allDrivers.find(d=>d.name && d.name.toLowerCase().includes('correlate'));
+  const isCorrelate = (v.product_name||'').toLowerCase().includes('correlate')
+    || (d.product_type||'').toLowerCase().includes('correlate')
+    || correlateDrv;
+  const correlateVer = correlateDrv?.version || (isCorrelate ? (v.inspect_version || 'detected') : null);
+  // Find HW Service version: prefer hardware_service parser, fallback to zeiss_versions
+  const hsVer = (d.hardware_service||{}).version || (d.hardware_service||{}).hal_version || v.hardware_service_version;
+
+  const cards=[
+    ['Product', d.product_type],
+    ['Dongle', dongStr],
+    ['ZEISS INSPECT', v.inspect_version],
+    ['ZEISS CORRELATE', correlateVer, correlateDrv?.install_date ? 'Installed: '+correlateDrv.install_date : (isCorrelate ? 'Detected from license mode' : null)],
+    ['Quality Suite', qzsDrv ? qzsDrv.version : v.quality_suite_version, qzsDrv?.install_date ? 'Installed: '+qzsDrv.install_date : null],
+    ['HW Service', hsVer],
+    ['CVB', cvbDrv?.version || null, cvbDrv?.install_date ? 'Installed: '+cvbDrv.install_date : null],
+    ['.NET Runtime', (() => {
+      const isNetRuntime = d => {
+        if(!d.name) return false;
+        const n = d.name.toLowerCase();
+        if(n.includes('framework')) return false;
+        if(!n.includes('.net') || !n.includes('runtime')) return false;
+        // Version must start with a single digit (6.x, 7.x, 8.x, 9.x) not 4x or 6x
+        if(d.version && !/^\d\.\d/.test(d.version)) return false;
+        return true;
+      };
+      const fromDrivers = allDrivers.find(isNetRuntime);
+      if(fromDrivers?.version) return fromDrivers.version;
+      const fromTimeline = (drv.install_timeline||[]).find(isNetRuntime);
+      return fromTimeline?.version || null;
+    })()],
+    ['Computer', si.computer_name],
+    ['OS', osShort, osFull],
+    ['Model', si.system_model],
+    ['CPU', cpuShort, cpuFull],
+    ['RAM', si.total_physical_memory],
+    ['GPU', gpu.name],
+    ['GPU Driver', gpu.driver_version],
+    ['CUDA', gpu.cuda_version],
+  ].filter(c=>c[1]);
+
+  // Add storage drives as cards -- value is usage, sub is free/label info
+  for(const dr of drives){
+    const totalGB = dr.total_mb ? (dr.total_mb/1024).toFixed(0) : '?';
+    const freeGB = dr.free_mb != null ? (dr.free_mb/1024).toFixed(0) : '?';
+    const usedGB = (dr.total_mb && dr.free_mb != null) ? ((dr.total_mb-dr.free_mb)/1024).toFixed(0) : '?';
+    const pct = (dr.total_mb && dr.free_mb != null) ? Math.round((dr.total_mb-dr.free_mb)/dr.total_mb*100) : null;
+    const drTitle = dr.letter + (dr.drive_type==='Fix Drive'?' Local':dr.drive_type==='Removable Drive'?' USB':'');
+    const drVal = `${usedGB} / ${totalGB} GB` + (pct!=null ? ` (${pct}%)` : '');
+    const drSub = `${freeGB} GB free` + (dr.label ? `\n${dr.label.trim()}` : '');
+    cards.push([drTitle, drVal, drSub]);
+  }
+
+  html += '<div class="section-header">System Overview</div>';
+  html += '<div class="grid">'+cards.map(c=>card(c[0],c[1],c[2])).join('')+'</div>';
+
+  // Cameras & Controllers (right after system overview)
+  const cam = d.cameras;
+  if(cam && ((cam.controllers||[]).length || (cam.cameras||[]).length)){
+    html += '<div class="section-header">Cameras &amp; Controllers</div>';
+    html += '<div class="grid">';
+    if(cam.controllers?.length){
+      for(const c of cam.controllers){
+        html += `<div class="card"><div class="card-title">Controller</div>
+          <div class="card-value">${h(c.name||c.device_type||'?')}</div>
+          <div class="card-sub">
+            ${c.device_type?'Type: '+h(c.device_type)+'<br>':''}
+            ${c.ip_address?'IP: '+h(c.ip_address)+'<br>':''}
+            ${c.sensor_type?'Sensor: '+h(c.sensor_type)+'<br>':''}
+            ${c.firmware?'Firmware: '+h(c.firmware)+'<br>':''}
+            ${c.broadcast_address?'Broadcast: '+h(c.broadcast_address):''}
+          </div>
+        </div>`;
+      }
+    }
+    if(cam.cameras?.length){
+      const isGigE = ['ARAMIS 24M','ARAMIS SRX'].includes(d.product_type) || ['ARAMIS 24M','ARAMIS SRX'].includes(d.detected_product);
+      for(const c of cam.cameras){
+        const camLabel = c.camera_name || c.model || 'Camera';
+        html += `<div class="card"><div class="card-title">${h(camLabel)}</div>
+          <div class="card-value">S/N: ${h(c.serial_number||'--')}</div>
+          <div class="card-sub">
+            ${c.model?'Model: '+h(c.model)+'<br>':''}
+            ${isGigE&&c.ip_address?'IP: '+h(c.ip_address)+'<br>':''}
+            ${isGigE&&c.mac_address?'MAC: '+h(c.mac_address)+'<br>':''}
+            ${isGigE&&c.interface_name?'NIC: '+h(c.interface_name)+'<br>':''}
+            ${isGigE&&c.gev_packet_size?'Packet Size: '+c.gev_packet_size:''}
+          </div>
+        </div>`;
+      }
+    }
+    html += '</div>';
+  }
+
+  // Licensing -- ALWAYS show this section
+  html += '<div class="section-header">Licenses</div>';
+  // Dongle info
+  if(lic.dongles?.length){
+    html += '<div class="grid" style="margin-bottom:0.5rem">';
+    for(const dng of lic.dongles){
+      html += `<div class="card"><div class="card-title">Dongle</div><div class="card-value">${h(dng.dongle_type||'')} ${h(dng.serial||'')}</div></div>`;
+    }
+    html += '</div>';
+  }
+  if(lic && lic.licenses && lic.licenses.length){
+    html += `<table class="lic-table"><thead><tr><th>Product</th><th>License Name</th><th>Version</th><th>Expiry</th><th>Type</th></tr></thead><tbody>`;
+    for(const l of lic.licenses){
+      const rf = l.raw_fields || {};
+      html += `<tr><td>${h(l.product||'')}</td><td>${h(rf['License Name']||rf['feature']||'')}</td><td>${h(l.version||'')}</td><td>${h(l.expiry||'')}</td><td>${h(l.license_type||'')}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if(lic.licensed_products?.length){
+      html += `<div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem">Licensed products: ${lic.licensed_products.map(h).join(', ')}</div>`;
+    }
+  } else if(!lic.dongles?.length) {
+    html += '<div style="padding:0.8rem;color:var(--warn);font-size:0.85rem">No license data found in archive.</div>';
+  }
+
+  // Installed Software (relevant drivers)
+  if(allDrivers.length){
+    html += '<div class="section-header">Key Software &amp; Drivers</div>';
+    html += `<table class="sw-table"><thead><tr><th>Name</th><th>Version</th><th>Installed</th></tr></thead><tbody>`;
+    for(const dr of allDrivers){
+      html += `<tr><td>${h(dr.name)}</td><td>${h(dr.version||'--')}</td><td>${h(dr.install_date||'--')}</td></tr>`;
+    }
+    html += '</tbody></table>';
+  }
+
+  // Full Install Timeline (collapsible)
+  const timeline = drv.install_timeline || [];
+  if(timeline.length){
+    html += '<details style="margin-top:0.5rem"><summary class="section-header" style="border:none;margin:0;cursor:pointer">Software Install Timeline (' + timeline.length + ' programs)</summary>';
+    html += `<table class="sw-table"><thead><tr><th>Installed</th><th>Name</th><th>Version</th></tr></thead><tbody>`;
+    for(const t of timeline){
+      html += `<tr><td style="white-space:nowrap">${h(t.install_date||'--')}</td><td>${h(t.name)}</td><td>${h(t.version||'--')}</td></tr>`;
+    }
+    html += '</tbody></table></details>';
+  }
+
+  // Problem Devices from msinfo32 (after timeline)
+  if(si.problem_devices && si.problem_devices.length){
+    html += '<div class="section-header">Problem Devices</div>';
+    for(const dev of si.problem_devices){
+      html += `<div class="finding WARNING"><div class="finding-title severity-WARNING">Device Manager Issue</div>
+        <div class="finding-desc">${h(dev)}</div></div>`;
+    }
+  }
+
+  // Network Adapters summary
+  const net = d.network;
+  if(net && net.adapters && net.adapters.length){
+    html += '<div class="section-header">Network Adapters</div>';
+    for(const adapter of net.adapters){
+      html += `<div class="card" style="margin-bottom:0.5rem">
+        <div class="card-title">${h(adapter.name)}</div>
+        <div class="card-value">${h(adapter.description||'')}</div>
+        <div class="nic-ips">${adapter.ip_addresses?.length ? 'IPs: '+adapter.ip_addresses.map(h).join(', ') : 'No IP assigned'}
+        ${adapter.mac_address ? ' | MAC: '+h(adapter.mac_address) : ''}</div>
+      </div>`;
+    }
+  }
+
+  // Hardware Service (HAL)
+  const hs = d.hardware_service;
+  if(hs){
+    html += '<div class="section-header">Hardware Service (HAL)</div>';
+    const hsCards = [
+      ['HAL Version', hs.hal_version],
+      ['Branch', hs.hal_branch],
+      ['Service Version', hs.version],
+      ['gRPC Status', hs.grpc_status],
+      ['Running', hs.running != null ? (hs.running ? 'Yes (PID '+hs.pid+')' : 'No') : null],
+      ['Startup Type', hs.service_startup_type],
+      ['MDM Port', '39025 (Device Communication)'],
+      ['Instances', hs.multiple_instances ? 'MULTIPLE (stale process!)' : null],
+      ['Total Sessions', hs.total_session_count != null ? String(hs.total_session_count) : null],
+    ].filter(c=>c[1]);
+    if(hsCards.length){
+      html += '<div class="grid">' + hsCards.map(c=>{
+        const isErr = (c[0]==='gRPC Status' && c[1]==='blocked') || (c[0]==='Running' && c[1]==='No')
+          || (c[0]==='Instances' && c[1]?.includes('MULTIPLE')) || (c[0]==='Startup Type' && c[1]!=='Automatic');
+        const cls = isErr ? ' style="border-color:var(--error)"' : '';
+        return `<div class="card"${cls}><div class="card-title">${h(c[0])}</div><div class="card-value">${h(c[1])}</div></div>`;
+      }).join('') + '</div>';
+    }
+    // Ports
+    if(hs.ports && hs.ports.length){
+      html += `<table class="sw-table" style="margin-top:0.5rem"><thead><tr><th>Port</th><th>Service</th><th>Status</th><th>Address</th></tr></thead><tbody>`;
+      for(const p of hs.ports){
+        const cls = p.status==='blocked'?'class="bad"':'';
+        html += `<tr><td>${p.port}</td><td>${h(p.service)}</td><td ${cls}>${h(p.status)}</td><td>${h(p.address||'')}</td></tr>`;
+      }
+      html += '</tbody></table>';
+    }
+    // Firewall & Prerequisites
+    const fwRules = hs.firewall_rules_found || [];
+    html += `<details style="margin-top:0.5rem"><summary>Firewall &amp; Prerequisites</summary>
+      <div style="padding:0.5rem;font-size:0.8rem">
+        <div style="margin-bottom:0.4rem"><strong>Firewall Rules:</strong></div>
+        <table class="sw-table"><thead><tr><th>Executable</th><th>Status</th></tr></thead><tbody>`;
+    const fwChecks = [
+      {exe: 'zeiss_inspect_hardwareserver.exe', desc: 'Hardware Server (acquisition)'},
+      {exe: 'zeiss_inspect_hardwareservice.exe', desc: 'Hardware Service (HAL)'},
+      {exe: 'zeiss_inspect.exe', desc: 'ZEISS INSPECT application'},
+    ];
+    for(const fw of fwChecks){
+      const found = fwRules.some(r => r.toLowerCase().includes(fw.exe.replace('.exe','')));
+      const cls = found ? 'color:var(--success)' : 'color:var(--warn)';
+      const status = found ? 'Allowed' : 'Not found in registry';
+      html += `<tr><td><code>${h(fw.exe)}</code><div style="font-size:0.65rem;color:var(--muted)">${h(fw.desc)}</div></td><td style="${cls};font-weight:600">${status}</td></tr>`;
+    }
+    html += `</tbody></table>
+        <div style="margin-top:0.5rem"><strong>Required Prerequisites:</strong></div>
+        <table class="sw-table"><thead><tr><th>Component</th><th>Minimum Version</th></tr></thead><tbody>
+          <tr><td>.NET Runtime (x64)</td><td>8.0.17 (2026) / 8.0.10 (2025)</td></tr>
+          <tr><td>Visual C++ 2015-2022 Redistributable (x64)</td><td>14.30+</td></tr>
+        </tbody></table>
+      </div>
+    </details>`;
+    // Timeline
+    if(hs.timeline && hs.timeline.length){
+      html += '<details style="margin-top:0.5rem"><summary>Connection Timeline ('+hs.timeline.length+' events)</summary>';
+      html += '<div style="font-size:0.75rem;font-family:monospace;padding:0.5rem;background:var(--bg);border-radius:var(--radius);margin-top:0.3rem">';
+      for(const ev of hs.timeline){
+        const isErr = ev.includes('ERROR') || ev.includes('BLOCKED') || ev.includes('FAILED');
+        const cls = isErr ? 'color:var(--error)' : 'color:var(--muted)';
+        html += `<div style="${cls}">${h(ev)}</div>`;
+      }
+      html += '</div></details>';
+    }
+    // Sessions from DB
+    if(hs.sessions && hs.sessions.length){
+      html += '<details style="margin-top:0.5rem"><summary>Recent Sessions ('+hs.sessions.length+')</summary>';
+      html += '<table class="sw-table" style="margin-top:0.3rem"><thead><tr><th>Timestamp</th><th>HW Type</th><th>SW Version</th><th>Manufacturer</th></tr></thead><tbody>';
+      for(const s of hs.sessions){
+        html += `<tr><td style="font-size:0.75rem">${h(s.timestamp||'')}</td><td>${h(s.hardware_type||'')}</td><td>${h(s.sw_version||'')}</td><td>${h(s.manufacturer||'')}</td></tr>`;
+      }
+      html += '</tbody></table></details>';
+    }
+    // Devices from DB
+    if(hs.devices && hs.devices.length){
+      html += `<table class="sw-table" style="margin-top:0.5rem"><thead><tr><th>Device ID</th><th>Name</th><th>Type</th><th>UUID</th></tr></thead><tbody>`;
+      for(const dev of hs.devices){
+        html += `<tr><td>${h(dev.device_id||'')}</td><td>${h(dev.name||'')}</td><td>${h(dev.device_type||'')}</td><td style="font-size:0.7rem">${h(dev.uuid||'')}</td></tr>`;
+      }
+      html += '</tbody></table>';
+    }
+    // DB Errors
+    if(hs.errors && hs.errors.length){
+      html += '<div class="section-header" style="font-size:0.85rem">Hardware Service Errors (from DB)</div>';
+      for(const e of hs.errors){
+        html += `<div class="finding CRITICAL"><div class="finding-title severity-CRITICAL">${h(e.error_code||'?')}: ${h(e.description||'')}</div>
+          <div class="finding-desc">Source: ${h(e.source_name||'?')}, Severity: ${h(e.severity||'?')}</div></div>`;
+      }
+    }
+  }
+
+  // Quality Suite Log errors
+  const qsl = d.quality_suite_log;
+  if(qsl && qsl.entries && qsl.entries.length){
+    html += '<details style="margin-top:0.5rem"><summary class="section-header" style="border:none;margin:0">Quality Suite Errors ('+qsl.total_errors+' errors, '+qsl.total_warnings+' warnings)</summary>';
+    for(const e of qsl.entries.slice(0,20)){
+      const cls = e.level==='ERROR'?'CRITICAL':e.level==='WARN'?'WARNING':'INFO';
+      html += `<div class="finding ${cls}" style="margin-top:0.3rem">
+        <div class="finding-title severity-${cls}">${h(e.level)}: ${h(e.message.substring(0,200))}</div>
+        <div class="finding-desc" style="font-size:0.7rem">${h(e.logger||'')}</div>
+        ${e.exception?'<details><summary style="font-size:0.7rem;color:var(--muted)">Stack trace</summary><pre style="font-size:0.65rem;color:var(--muted);white-space:pre-wrap;max-height:200px;overflow:auto">'+h(e.exception.substring(0,1000))+'</pre></details>':''}
+      </div>`;
+    }
+    if(qsl.entries.length>20) html += `<div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem">... and ${qsl.entries.length-20} more entries</div>`;
+    html += '</details>';
+  }
+
+  html += '</div></div>'; // end panel-content + panel-sysinfo
+
+  // ===================== PANEL 2: ISSUES =====================
+  html += '<div class="tab-panel" id="panel-issues"><nav class="panel-sidebar"></nav><div class="panel-content">';
+
+  if(!allFindings.length){
+    html += '<div style="padding:2rem;text-align:center;color:var(--success)">No issues detected.</div>';
+  } else {
+    // NIC issues grouped by adapter
+    if(nicFindings.length){
+      html += '<div class="section-header">Network Configuration Issues</div>';
+      const adapterFindings = {};
+      for(const f of nicFindings){
+        const m = f.title.match(/on (.+)$/);
+        const key = m ? m[1] : 'other';
+        if(!adapterFindings[key]) adapterFindings[key]=[];
+        adapterFindings[key].push(f);
+      }
+
+      for(const adapter of (net?.adapters||[])){
+        const findings = adapterFindings[adapter.name] || [];
+        if(!findings.length) continue;
+        const desc = adapter.description || '';
+        const shortName = adapter.name.replace(/^Ethernet adapter\s+/i,'').replace(/^Wireless LAN adapter\s+/i,'');
+
+        html += `<div class="nic-group">
+          <div class="nic-group-header">
+            <div><div class="nic-group-title">${h(adapter.name)}</div><div class="nic-group-desc">${h(desc)}</div></div>
+            <span class="nic-status warn">${findings.length} issue${findings.length>1?'s':''}</span>
+          </div>`;
+        if(adapter.ip_addresses?.length) html += `<div class="nic-ips">IPs: ${adapter.ip_addresses.map(h).join(', ')}</div>`;
+
+        html += `<table class="nic-table"><thead><tr><th>Setting (GUI Name)</th><th>Current</th><th>Required</th><th>Source</th></tr></thead><tbody>`;
+        const fixCmds = [];
+        for(const f of findings){
+          const pm = f.title.match(/NIC misconfiguration:\s+(\S+)/);
+          const regKey = pm ? pm[1] : f.title;
+          // New description format: "GUI Name is 'value desc' (raw) but should be 'value desc' (raw)"
+          const dm = f.description.match(/^(.+?) is '([^']+)' \(([^)]+)\) but should be '([^']+)' \(([^)]+)\)/);
+          let guiName, currentDesc, currentRaw, expectedDesc, expectedRaw;
+          if(dm){
+            guiName=dm[1]; currentDesc=dm[2]; currentRaw=dm[3]; expectedDesc=dm[4]; expectedRaw=dm[5];
+          } else {
+            // Fallback for old format
+            const dm2 = f.description.match(/is '([^']+)' but expected '([^']+)'/);
+            guiName=regKey; currentDesc=dm2?dm2[1]:'?'; currentRaw=currentDesc; expectedDesc=dm2?dm2[2]:'?'; expectedRaw=expectedDesc;
+          }
+          html += `<tr><td>${h(guiName)}<div style="font-size:0.65rem;color:var(--muted)">Registry: *${h(regKey)}</div></td>
+            <td class="bad">${h(currentDesc)}<div style="font-size:0.65rem;color:var(--muted)">(${h(currentRaw)})</div></td>
+            <td class="good">${h(expectedDesc)}<div style="font-size:0.65rem;color:var(--muted)">(${h(expectedRaw)})</div></td>
+            <td style="font-size:0.7rem;color:var(--muted)">nics.log <sup>[1]</sup></td></tr>`;
+          const val = expectedRaw.startsWith('>=') ? expectedRaw.slice(2) : expectedRaw;
+          fixCmds.push(`Set-NetAdapterAdvancedProperty -Name "${shortName}" -RegistryKeyword "*${regKey}" -RegistryValue ${val}`);
+        }
+        html += '</tbody></table>';
+        if(fixCmds.length){
+          html += `<div class="fix-cmd-label">PowerShell fix (run as Administrator):</div>
+            <div class="fix-cmd" onclick="navigator.clipboard.writeText(this.innerText.replace('Copy','').trim())">
+              <span class="copy-btn">Copy</span>${h(fixCmds.join('\n'))}</div>`;
+        }
+        html += '</div>';
+      }
+
+      html += `<div style="font-size:0.68rem;color:var(--muted);margin:0.5rem 0 1rem">
+        <sup>[1]</sup> NIC advanced properties from PowerShell Get-NetAdapterAdvancedProperty in nics.log.
+        Expected values based on Trilion field experience and ZEISS release notes.
+      </div>`;
+    }
+
+    // HAL / Hardware Service findings
+    if(halFindings.length){
+      html += '<div class="section-header">Hardware Service (HAL) Issues</div>';
+      for(const f of halFindings){
+        html += `<div class="finding ${f.severity}">
+          <div class="finding-title severity-${f.severity}">${h(f.severity)}: ${h(f.title)}</div>
+          <div class="finding-desc">${h(f.description)}</div>
+          ${f.recommendation?'<div class="finding-rec">'+h(f.recommendation)+'</div>':''}
+        </div>`;
+      }
+      // Firewall reminder
+      html += `<div style="margin-top:0.5rem;padding:0.6rem;border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem">
+        <strong>Firewall Reminder:</strong> Ensure these executables are allowed through Windows Firewall:
+        <ul style="margin:0.3rem 0 0 1.2rem;padding:0">
+          <li><code>zeiss/inspect/2026/bin/zeiss_inspect_hardwareserver.exe</code></li>
+          <li><code>zeiss/inspect-hardware-service/bin/zeiss_inspect_hardwareservice.exe</code></li>
+        </ul>
+      </div>`;
+    }
+
+    // Other findings
+    if(otherFindings.length){
+      html += '<div class="section-header">Other Findings</div>';
+      for(const f of otherFindings){
+        html += `<div class="finding ${f.severity}">
+          <div class="finding-title severity-${f.severity}">${h(f.severity)}: ${h(f.title)}</div>
+          <div class="finding-desc">${h(f.description)}</div>
+          ${f.recommendation?'<div class="finding-rec">'+h(f.recommendation)+'</div>':''}
+        </div>`;
+      }
+    }
+  }
+  // --- Copy for AI assistant ---
+  html += buildAICopyBlock(d, allFindings, nicFindings, otherFindings);
+
+  html += '</div></div>'; // end panel-content + panel-issues
+
+  // ===================== PANEL 3: VERIFIED =====================
+  html += '<div class="tab-panel" id="panel-verified"><nav class="panel-sidebar"></nav><div class="panel-content">';
+
+  if(!verified.length){
+    html += '<div style="padding:2rem;text-align:center;color:var(--muted)">No verification checks available.</div>';
+  } else {
+    // Non-network categories first
+    const nonNetCats = ['version','driver','license','system'];
+    const catLabels = {version:'Version Compatibility',driver:'Drivers & Software',license:'Licensing',network:'Network Configuration',system:'Hardware & Sensors'};
+    for(const cat of nonNetCats){
+      const items = verified.filter(v=>v.category===cat);
+      if(!items.length) continue;
+      html += `<div class="section-header">${catLabels[cat]||cat}</div>`;
+      for(const item of items){
+        html += `<div class="verified-item">
+          <span class="verified-icon">&#10003;</span>
+          <div style="flex:1">
+            <div class="verified-title">${h(item.title)}</div>
+            <div class="verified-detail">${h(item.detail)}</div>
+            ${item.source ? '<div class="verified-source">Source: '+h(item.source)+'</div>' : ''}
+          </div>
+        </div>`;
+      }
+    }
+    // Network checks grouped by adapter
+    const netItems = verified.filter(v=>v.category==='network');
+    if(netItems.length){
+      html += `<div class="section-header">${catLabels.network}</div>`;
+      // Group by adapter name extracted from title
+      const byAdapter = {};
+      for(const item of netItems){
+        // "Jumbo frames enabled on Ethernet adapter Ethernet 2" -> "Ethernet adapter Ethernet 2"
+        // "IP assigned on Ethernet adapter Ethernet 4" -> "Ethernet adapter Ethernet 4"
+        const m = item.title.match(/on ((?:Ethernet|Wireless).*)/i);
+        const key = m ? m[1] : 'Other';
+        if(!byAdapter[key]) byAdapter[key]=[];
+        byAdapter[key].push(item);
+      }
+      for(const [adapterName, items] of Object.entries(byAdapter)){
+        html += `<div class="nic-group" style="margin-bottom:0.6rem">
+          <div class="nic-group-header">
+            <div class="nic-group-title">${h(adapterName)}</div>
+            <span class="nic-status ok">${items.length} verified</span>
+          </div>`;
+        for(const item of items){
+          // Strip the adapter name from the title for brevity
+          const shortTitle = item.title.replace(/\s+on\s+(?:Ethernet|Wireless).*/i, '');
+          html += `<div class="verified-item" style="border:none;padding:0.2rem 0">
+            <span class="verified-icon">&#10003;</span>
+            <div style="flex:1">
+              <div class="verified-title">${h(shortTitle)}</div>
+              <div class="verified-detail">${h(item.detail)}</div>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+    }
+  }
+  html += '</div></div>'; // end panel-content + panel-verified
+
+  // ===================== PANEL 4: ACTIVITY TIMELINE =====================
+  html += '<div class="tab-panel" id="panel-timeline"><nav class="panel-sidebar"></nav><div class="panel-content">';
+  const at = d.activity_timeline;
+  if(at && at.events && at.events.length){
+    const catColors = {project:'var(--info)',acquisition:'var(--warn)',component:'var(--success)',
+      inspection:'#9c27b0',hardware:'var(--error)',app:'var(--muted)',script:'#ff9800',error:'var(--error)',
+      calibration:'#00bcd4',report:'#795548',alignment:'#4caf50',view:'#78909c',
+      element:'#5c6bc0',navigation:'#78909c','import':'#00897b','export':'#6d4c41',
+      system:'var(--muted)',other:'var(--muted)'};
+
+    // === LAST ACTIONS (what they were doing when it crashed) ===
+    html += '<div class="section-header">Last Actions Before Archive</div>';
+    html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.6rem;margin-bottom:1rem">';
+    const lastFive = at.events.filter(e=>e.timestamp).slice(0, 8);
+    if(lastFive.length){
+      for(let i=0; i<lastFive.length; i++){
+        const ev = lastFive[i];
+        const ts = ev.timestamp || '';
+        const cc = catColors[ev.category] || 'var(--muted)';
+        const isFirst = i === 0;
+        html += `<div style="display:flex;gap:0.6rem;padding:0.25rem 0;${isFirst?'font-weight:600':''}">
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--muted);min-width:180px;white-space:nowrap">${h(ts)}</span>
+          <span style="font-size:0.7rem;font-weight:600;color:${cc};min-width:80px">${h(ev.category)}</span>
+          <span style="font-size:0.82rem">${h(ev.action)}${ev.detail?' -- '+h(ev.detail):''}</span>
+        </div>`;
+      }
+    }
+    html += '</div>';
+
+    // === Summary cards ===
+    html += '<div class="section-header">Session Summary</div>';
+    html += '<div class="grid">';
+    if(at.last_action) html += card('Last Action', at.last_action);
+    if(at.last_project) html += card('Last Project', at.last_project);
+    html += card('Exit Status', at.project_open === false ? 'Clean exit' : 'Unknown / crash');
+    if(at.stage_count != null) html += card('Stages Visited', String(at.stage_count));
+    html += card('Total Commands', String(at.total_commands || at.events.length));
+    if(at.hang_count > 0) html += `<div class="card" style="border-color:var(--error)"><div class="card-title">Application Hangs</div><div class="card-value" style="color:var(--error)">${at.hang_count}</div></div>`;
+    html += '</div>';
+
+    // === Command frequency (top 10) ===
+    if(at.command_summary && Object.keys(at.command_summary).length){
+      html += '<div class="section-header">Most Frequent Commands</div>';
+      html += '<table class="sw-table"><thead><tr><th>Command</th><th style="width:60px">Count</th></tr></thead><tbody>';
+      const sorted = Object.entries(at.command_summary).sort((a,b)=>b[1]-a[1]).slice(0,10);
+      for(const [cmd, count] of sorted){
+        const shortCmd = cmd.replace('sys.','').replace('_',' ');
+        html += `<tr><td style="font-family:monospace;font-size:0.78rem">${h(cmd)}</td><td>${count}</td></tr>`;
+      }
+      html += '</tbody></table>';
+    }
+
+    // === Category filter buttons ===
+    const cats = [...new Set(at.events.map(e=>e.category))].sort();
+    html += '<div class="section-header">Full Event Log</div>';
+    html += '<div style="margin:0 0 0.4rem;display:flex;gap:0.3rem;flex-wrap:wrap">';
+    html += '<button class="log-open-btn timeline-filter active" data-cat="all" style="font-size:0.7rem">All ('+at.events.length+')</button>';
+    for(const cat of cats){
+      const count = at.events.filter(e=>e.category===cat).length;
+      const cc = catColors[cat] || 'var(--muted)';
+      html += `<button class="log-open-btn timeline-filter" data-cat="${h(cat)}" style="font-size:0.7rem;border-left:3px solid ${cc}">${h(cat)} (${count})</button>`;
+    }
+    html += '</div>';
+
+    // === Events table ===
+    html += `<table class="sw-table" id="timeline-table"><thead><tr><th style="width:180px">Time</th><th style="width:80px">Category</th><th>Action</th><th>Detail</th></tr></thead><tbody>`;
+    for(const ev of at.events){
+      const ts = ev.timestamp || '';
+      const cc = catColors[ev.category] || '';
+      const isErr = ev.category === 'error';
+      html += `<tr data-cat="${h(ev.category)}"${isErr?' style="background:rgba(204,0,0,0.08)"':''}>
+        <td style="font-family:monospace;font-size:0.72rem;white-space:nowrap">${h(ts)}</td>
+        <td><span style="font-size:0.7rem;font-weight:600;color:${cc}">${h(ev.category)}</span></td>
+        <td style="font-size:0.8rem">${h(ev.action)}</td>
+        <td style="font-size:0.75rem;color:var(--muted)">${h(ev.detail)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+  } else {
+    html += '<div class="empty-state">No activity events found in application logs.</div>';
+  }
+  html += '</div></div>'; // end panel-content + panel-timeline
+
+  // ===================== PANEL 5: LOGS =====================
+  html += '<div class="tab-panel" id="panel-logs"><div class="panel-content">';
+  const inv = d.log_inventory;
+  if(inv && inv.files && inv.files.length){
+    // Categorize files into groups
+    function logGroup(name){
+      const n = name.toLowerCase();
+      if(n.startsWith('zi_acq')) return 'Acquisition Logs (2026)';
+      if(n.startsWith('gom-hal')) return 'Hardware Service (HAL) Logs';
+      if(n.startsWith('gom-acq')) return 'Acquisition Logs (2023)';
+      if(n.startsWith('gom-ct')) return 'CT Logs';
+      if(n.startsWith('zeiss_inspect-')) return 'ZEISS INSPECT Application Logs';
+      if(n.startsWith('gomsoftware')) return 'ZEISS Application Logs (2024)';
+      if(n.startsWith('gom-')) return 'ZEISS Process Logs';
+      if(n.endsWith('.evtx')) return 'Windows Event Logs';
+      if(n.endsWith('.csv') || n.endsWith('.txt') || n === 'license_info.log') return 'Data Files';
+      if(n === 'msinfo32.log' || n === 'nics.log' || n === 'tasklist.log' || n === 'registry.log'
+        || n === 'installedprograms.log' || n === 'nvidia-smi.log' || n === 'pnputil.log') return 'System Diagnostic Files';
+      if(n === 'codemeter.log') return 'CodeMeter Diagnostics';
+      return 'Other Files';
+    }
+
+    // Build grouped structure
+    const groups = {};
+    inv.files.forEach((f, i) => {
+      const g = logGroup(f.filename);
+      if(!groups[g]) groups[g] = [];
+      groups[g].push({file: f, idx: i});
+    });
+
+    // Preferred group order
+    const groupOrder = [
+      'ZEISS INSPECT Application Logs', 'Acquisition Logs (2026)', 'Acquisition Logs (2023)',
+      'Hardware Service (HAL) Logs', 'ZEISS Process Logs', 'ZEISS Application Logs (2024)',
+      'CT Logs', 'CodeMeter Diagnostics', 'System Diagnostic Files',
+      'Windows Event Logs', 'Data Files', 'Other Files',
+    ];
+    const sortedGroups = groupOrder.filter(g => groups[g]).concat(
+      Object.keys(groups).filter(g => !groupOrder.includes(g))
+    );
+
+    // Helper to render a log file row
+    function logRow(f, i){
+      const sizeStr = f.size_bytes >= 1024*1024 ? (f.size_bytes/(1024*1024)).toFixed(1)+' MB' :
+                      f.size_bytes >= 1024 ? (f.size_bytes/1024).toFixed(0)+' KB' :
+                      f.size_bytes+' B';
+      let badges = '';
+      if(f.has_errors) badges += '<span class="log-badge log-badge-err">ERR</span> ';
+      if(f.has_warnings) badges += '<span class="log-badge log-badge-warn">WARN</span>';
+      if(!f.has_errors && !f.has_warnings) badges = '<span style="color:var(--success);font-size:0.72rem">OK</span>';
+      const desc = f.description || '';
+      const tsInfo = f.first_timestamp ? ` | ${f.first_timestamp.substring(0,19)}` : '';
+      return `<tr>
+        <td><div style="font-family:monospace;font-size:0.75rem">${h(f.filename)}</div>
+            <div style="font-size:0.65rem;color:var(--muted)">${h(desc)}${tsInfo} | ${f.line_count.toLocaleString()} lines</div></td>
+        <td style="font-size:0.75rem;white-space:nowrap">${sizeStr}</td>
+        <td>${badges}</td>
+        <td><input type="checkbox" class="log-pdf-checkbox" data-log-idx="${i}" title="Include in PDF"></td>
+        <td style="white-space:nowrap">
+          <button class="log-open-btn" data-log-idx="${i}" title="Open in viewer">Open</button>
+          <button class="log-expand-btn" data-log-idx="${i}" title="Expand inline" style="margin-left:0.2rem">&#9660;</button>
+        </td>
+      </tr>
+      <tr class="log-expand-row" data-log-idx="${i}" style="display:none">
+        <td colspan="5" style="padding:0">
+          <div style="position:relative">
+            <button class="log-open-btn" style="position:absolute;top:0.3rem;right:0.3rem;font-size:0.65rem;padding:0.15rem 0.4rem" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('pre').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+            <pre class="log-expand-pre" style="max-height:300px;overflow:auto;font-size:0.68rem;line-height:1.4;padding:0.5rem;background:var(--bg);border-radius:var(--radius);margin:0.2rem 0;white-space:pre-wrap;word-break:break-all;color:var(--muted)"></pre>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    const logTableHeader = `<table class="log-table"><thead><tr>
+      <th>File</th><th>Size</th><th>Status</th>
+      <th title="Include in PDF">PDF</th><th></th>
+    </tr></thead><tbody>`;
+
+    html += `<div class="section-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Logs (${inv.files.length} files)</span>
+      <span style="font-size:0.7rem;font-weight:400">
+        <button class="log-open-btn" onclick="document.querySelectorAll('#panel-logs details').forEach(d=>d.open=true)" style="font-size:0.65rem;padding:0.15rem 0.5rem">Expand All</button>
+        <button class="log-open-btn" onclick="document.querySelectorAll('#panel-logs details').forEach(d=>d.open=false)" style="font-size:0.65rem;padding:0.15rem 0.5rem">Collapse All</button>
+      </span>
+    </div>`;
+
+    // Separate single-file groups (render inline) from multi-file groups (render as collapsible)
+    const singleFiles = [];
+    const multiGroups = [];
+    for(const groupName of sortedGroups){
+      const items = groups[groupName];
+      if(!items) continue;
+      if(items.length === 1) singleFiles.push(items[0]);
+      else multiGroups.push({name: groupName, items});
+    }
+
+    // Render multi-file groups (collapsed by default)
+    for(const {name: groupName, items} of multiGroups){
+      const errCount = items.filter(i=>i.file.has_errors).length;
+      const warnCount = items.filter(i=>i.file.has_warnings).length;
+      const statusBadge = errCount ? `<span class="log-badge log-badge-err">${errCount} ERR</span> ` :
+                          warnCount ? `<span class="log-badge log-badge-warn">${warnCount} WARN</span>` : '';
+
+      html += `<details style="margin-bottom:0.3rem">
+        <summary style="font-size:0.82rem;font-weight:600;cursor:pointer;padding:0.25rem 0;color:var(--text)">
+          ${h(groupName)} (${items.length}) ${statusBadge}
+        </summary>`;
+      html += logTableHeader;
+      for(const {file: f, idx: i} of items) html += logRow(f, i);
+      html += '</tbody></table></details>';
+    }
+
+    // Render single-file entries together
+    if(singleFiles.length){
+      html += `<details style="margin-bottom:0.3rem">
+        <summary style="font-size:0.82rem;font-weight:600;cursor:pointer;padding:0.25rem 0;color:var(--text)">
+          Other Files (${singleFiles.length})
+        </summary>`;
+      html += logTableHeader;
+      for(const {file: f, idx: i} of singleFiles) html += logRow(f, i);
+      html += '</tbody></table></details>';
+    }
+  } else {
+    html += '<div class="empty-state">No log files found in archive.</div>';
+  }
+  // Container for PDF-included log content (hidden, shown only during print)
+  html += '<div id="pdf-log-content"></div>';
+  html += '</div></div>'; // end panel-content + panel-logs
+
+  // ===================== PANEL 5: DEBUG =====================
+  html += '<div class="tab-panel" id="panel-debug"><div class="panel-content">';
+  const trace = d.debug_trace;
+  if(trace){
+    html += '<div class="section-header">Parser Execution Trace</div>';
+    html += '<div class="trace">' + trace.parser_traces.map(t => {
+      const cls = t.status==='success'?'trace-ok':t.status==='failed'?'trace-fail':'trace-skip';
+      return `<span class="${cls}">${h(t.parser_name)}</span> ${t.duration_ms.toFixed(0)}ms`;
+    }).join(' | ') + '</div>';
+    if(trace.total_duration_ms){
+      html += `<div class="trace" style="margin-top:0.3rem">Total: ${trace.total_duration_ms.toFixed(0)}ms</div>`;
+    }
+    // Detailed per-parser info
+    html += '<div style="margin-top:1rem">';
+    for(const t of trace.parser_traces){
+      if(t.notes?.length || t.error_message){
+        const cls = t.status==='success'?'trace-ok':t.status==='failed'?'trace-fail':'trace-skip';
+        html += `<details><summary><span class="${cls}">${h(t.parser_name)}</span> (${t.status})</summary>
+          <div style="padding:0.3rem 0 0.3rem 1rem;font-size:0.75rem;color:var(--muted)">`;
+        if(t.error_message) html += `<div style="color:var(--error)">Error: ${h(t.error_message)}</div>`;
+        for(const n of (t.notes||[])) html += `<div>${h(n)}</div>`;
+        html += '</div></details>';
+      }
+    }
+    html += '</div>';
+  }
+  html += '</div></div>'; // end panel-content + panel-debug
+
+  resultsEl.innerHTML = html;
+
+  // Tab switching + sidebar navigation
+  wireTabSwitching(resultsEl);
+  buildPanelSidebars(resultsEl);
+
+  // Log viewer "Open" buttons (only those with data-log-idx)
+  resultsEl.querySelectorAll('.log-open-btn[data-log-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.logIdx);
+      const inv = d.log_inventory;
+      if(inv && inv.files && inv.files[idx]){
+        openLogViewer(inv.files[idx].filename, inv.files[idx].content || '(no content available)');
+      }
+    });
+  });
+
+  // Log expand/collapse buttons (only those with data-log-idx)
+  resultsEl.querySelectorAll('.log-expand-btn[data-log-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = btn.dataset.logIdx;
+      const row = resultsEl.querySelector(`.log-expand-row[data-log-idx="${idx}"]`);
+      if(!row) return;
+      const isOpen = row.style.display !== 'none';
+      if(isOpen){
+        row.style.display = 'none';
+        btn.innerHTML = '&#9660;';
+      } else {
+        row.style.display = '';
+        btn.innerHTML = '&#9650;';
+        // Lazy-load content
+        const pre = row.querySelector('pre');
+        if(!pre.textContent){
+          const inv = d.log_inventory;
+          if(inv && inv.files && inv.files[parseInt(idx)]){
+            pre.textContent = inv.files[parseInt(idx)].content || '(no content)';
+          }
+        }
+      }
+    });
+  });
+
+  // Timeline category filter buttons
+  resultsEl.querySelectorAll('.timeline-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      resultsEl.querySelectorAll('.timeline-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      const table = resultsEl.querySelector('#timeline-table');
+      if(!table) return;
+      table.querySelectorAll('tbody tr').forEach(tr => {
+        tr.style.display = (cat === 'all' || tr.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  });
+}
+// ===================== Cmd+K Search Palette =====================
+let searchOverlay = null;
+let searchActiveIdx = 0;
+let searchItems = [];
+
+function buildSearchIndex(){
+  searchItems = [];
+  // Sections from sidebar links
+  resultsEl.querySelectorAll('.panel-sidebar a').forEach(a => {
+    searchItems.push({type:'section', text: a.textContent, action: () => a.click()});
+  });
+  // Tabs
+  resultsEl.querySelectorAll('.tab').forEach(tab => {
+    searchItems.push({type:'tab', text: tab.textContent.trim(), action: () => tab.click()});
+  });
+  // Findings
+  if(lastParseData?.findings){
+    for(const f of lastParseData.findings){
+      searchItems.push({type: f.severity, text: f.title, sub: f.description?.substring(0,80), action: () => {
+        // Switch to issues tab
+        const issuesTab = resultsEl.querySelector('[data-tab="issues"]');
+        if(issuesTab) issuesTab.click();
+      }});
+    }
+  }
+  // Log files
+  if(lastParseData?.log_inventory?.files){
+    for(let i=0; i<lastParseData.log_inventory.files.length; i++){
+      const f = lastParseData.log_inventory.files[i];
+      searchItems.push({type:'log', text: f.filename, sub: f.description, action: () => {
+        const logsTab = resultsEl.querySelector('[data-tab="logs"]');
+        if(logsTab) logsTab.click();
+        setTimeout(()=>{
+          const btn = resultsEl.querySelector(`.log-open-btn[data-log-idx="${i}"]`);
+          if(btn) btn.click();
+        }, 100);
+      }});
+    }
+  }
+  // Verified checks
+  if(lastParseData?.verified_checks){
+    for(const c of lastParseData.verified_checks){
+      searchItems.push({type:'verified', text: c.title, sub: c.detail, action: () => {
+        const tab = resultsEl.querySelector('[data-tab="verified"]');
+        if(tab) tab.click();
+      }});
+    }
+  }
+}
+
+function openSearch(){
+  buildSearchIndex();
+  searchActiveIdx = 0;
+  const overlay = document.createElement('div');
+  overlay.className = 'search-overlay';
+  overlay.innerHTML = `<div class="search-palette">
+    <input class="search-input" placeholder="Search sections, issues, logs..." autofocus>
+    <div class="search-results"></div>
+    <div class="search-hint">Navigate with arrow keys, Enter to select, Esc to close</div>
+  </div>`;
+  overlay.addEventListener('click', e => { if(e.target === overlay) closeSearch(); });
+  document.body.appendChild(overlay);
+  searchOverlay = overlay;
+
+  const input = overlay.querySelector('.search-input');
+  const resultsDiv = overlay.querySelector('.search-results');
+  input.focus();
+
+  function renderSearchResults(query){
+    const q = query.toLowerCase().trim();
+    let filtered = searchItems;
+    if(q){
+      filtered = searchItems.filter(item =>
+        item.text.toLowerCase().includes(q) ||
+        (item.sub||'').toLowerCase().includes(q) ||
+        item.type.toLowerCase().includes(q)
+      );
+      // Also search through log content
+      if(lastParseData?.log_inventory?.files && q.length >= 3){
+        for(let i=0; i<lastParseData.log_inventory.files.length; i++){
+          const f = lastParseData.log_inventory.files[i];
+          if(f.content && f.content.toLowerCase().includes(q)){
+            const existing = filtered.find(x => x.type==='log' && x.text===f.filename);
+            if(!existing){
+              filtered.push({type:'match', text: f.filename, sub: 'Content match: "'+q+'"', action: () => {
+                const logsTab = resultsEl.querySelector('[data-tab="logs"]');
+                if(logsTab) logsTab.click();
+                setTimeout(()=>openLogViewer(f.filename, f.content), 100);
+              }});
+            }
+          }
+        }
+      }
+    }
+    filtered = filtered.slice(0, 20);
+    searchActiveIdx = Math.min(searchActiveIdx, Math.max(0, filtered.length-1));
+    resultsDiv.innerHTML = filtered.map((item, i) =>
+      `<div class="search-result${i===searchActiveIdx?' active':''}" data-idx="${i}">
+        <span class="search-result-type">${h(item.type)}</span>
+        <div><div class="search-result-text">${h(item.text)}</div>
+        ${item.sub?'<div class="search-result-sub">'+h(item.sub)+'</div>':''}</div>
+      </div>`
+    ).join('');
+    // Click handlers
+    resultsDiv.querySelectorAll('.search-result').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.dataset.idx);
+        if(filtered[idx]) { filtered[idx].action(); closeSearch(); }
+      });
+    });
+    return filtered;
+  }
+
+  let currentFiltered = renderSearchResults('');
+
+  input.addEventListener('input', () => {
+    searchActiveIdx = 0;
+    currentFiltered = renderSearchResults(input.value);
+  });
+  input.addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown'){ e.preventDefault(); searchActiveIdx = Math.min(searchActiveIdx+1, currentFiltered.length-1); renderSearchResults(input.value); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); searchActiveIdx = Math.max(searchActiveIdx-1, 0); renderSearchResults(input.value); }
+    else if(e.key === 'Enter'){ e.preventDefault(); if(currentFiltered[searchActiveIdx]){ currentFiltered[searchActiveIdx].action(); closeSearch(); } }
+    else if(e.key === 'Escape'){ closeSearch(); }
+  });
+}
+
+function closeSearch(){
+  if(searchOverlay){ searchOverlay.remove(); searchOverlay = null; }
+}
+
+// Keyboard shortcut: Ctrl+K or Cmd+K
+document.addEventListener('keydown', e => {
+  if((e.metaKey || e.ctrlKey) && e.key === 'k'){
+    e.preventDefault();
+    if(searchOverlay) closeSearch();
+    else openSearch();
+  }
+  if(e.key === 'Escape' && searchOverlay) closeSearch();
+});
+</script>
+</body>
+</html>

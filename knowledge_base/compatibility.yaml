@@ -1,0 +1,271 @@
+# Version compatibility matrix for ZEISS measurement systems.
+#
+# Sources: ZEISS INSPECT Release Notes (2023, 2025, 2026)
+# Last updated from release notes PDFs in knowledge_base/release_notes/
+#
+# Note: Mellanox/Rivermax/NVIDIA GPU/CVB driver version requirements are NOT
+# explicitly documented in ZEISS release notes. Those requirements come from
+# Trilion field experience and ZEISS support guidance. They are marked with
+# source: "Trilion field experience" below.
+
+zeiss_inspect_versions:
+
+  "2026":
+    display: "ZEISS INSPECT 2026"
+    service_packs:
+      SP1: "2026.3.0.984"
+      Release: "2026.2.0.1091"
+    components:
+      zeiss_quality_suite:
+        name: "ZEISS Quality Suite"
+        versions: {"SP1": "7.0.02778.0", "Release": "7.0.2770.0"}
+        source: "ZEISS INSPECT 2026 Release Notes"
+      hardware_service:
+        name: "ZEISS Hardware Service"
+        versions: {"SP1": "1.0.2.1", "Release": "1.0.2.1"}
+        min_version: "1.0.2.1"
+        source: "ZEISS INSPECT 2026 Release Notes"
+      image_acquisition_driver:
+        name: "Image Acquisition Driver (CVB)"
+        versions: {"SP1": "14.01.011", "Release": "14.01.006"}
+        min_version: "14.01.006"
+        source: "ZEISS INSPECT 2026 Release Notes"
+      camera_driver_aramis_24m:
+        name: "Camera Driver ARAMIS 24M (Emergent)"
+        versions: {"SP1": "2.44.02", "Release": "2.44.02"}
+        min_version: "2.44.02"
+        source: "ZEISS INSPECT 2026 Release Notes"
+      colin3d:
+        name: "colin3D"
+        versions: {"SP1": "9.1.0.36", "Release": "9.1.0.36"}
+        source: "ZEISS INSPECT 2026 Release Notes"
+      tscan_hawk:
+        name: "T-SCAN hawk"
+        versions: {"SP1": "3.0.5", "Release": "3.0.5"}
+        source: "ZEISS INSPECT 2026 Release Notes"
+      dotnet:
+        name: ".NET Runtime"
+        versions: {"SP1": "8.0.24", "Release": "8.0.17"}
+        min_version: "8.0.17"
+        source: "ZEISS INSPECT 2026 Release Notes"
+      vcredist:
+        name: "Microsoft Visual C++ 2015-2022 Redistributable (x64)"
+        min_version: "14.30"
+        source: "ZEISS INSPECT 2026 Release Notes"
+        notes: "Required by Hardware Service and other native components"
+      # Drivers NOT in release notes -- from Trilion field experience:
+      mellanox_winof2:
+        name: "Mellanox WinOF-2 (MLNX_WinOF2)"
+        min_version: "3.10.50000"
+        source: "Trilion field experience"
+      rivermax:
+        name: "Rivermax"
+        min_version: "1.20.10"
+        required_for: ["ARAMIS 24M"]
+        source: "Trilion field experience"
+        notes: >
+          Rivermax license file (rivermax.lic) must be present at
+          C:\Program Files\Mellanox\Rivermax\lib\rivermax.lic.
+          RIVERMAX_LOG_LEVEL env var should be set (typically 6).
+      codemeter:
+        name: "CodeMeter Runtime"
+        min_version: "7.60"
+        source: "Trilion field experience (2023 SP5 ships 7.60d)"
+      common_vision_blox:
+        name: "Common Vision Blox (CVB)"
+        min_version: "14.01.006"
+        source: "Trilion field experience (matches Image Acquisition Driver)"
+    os_requirements:
+      - "Windows 10 64-bit (min 1607), recommended 21H1+"
+      - "Windows 11 64-bit, recommended 24H2"
+    known_issues:
+      - id: zi2026_proxy_init
+        description: "ATOS sensor init can fail if proxy server is defined (fixed in SP1)"
+        affected_sp: ["Release"]
+      - id: zi2026_correlate_ad_delay
+        description: "Deformation measurement stages can have missing A/D values when using A/D delay (fixed in SP1)"
+        affected_sp: ["Release"]
+      - id: zi2026_not_connected_quality
+        description: "2026 projects not compatible with ZEISS CONNECTED QUALITY"
+        affected_sp: ["SP1"]
+    discontinued_sensors:
+      - "ATOS II Triple Scan Rev.02 / Rev.02.1"
+      - "ATOS Triple Scan 12M"
+      - "ATOS III (+)"
+
+  "2025":
+    display: "ZEISS INSPECT 2025"
+    service_packs:
+      SP3: "2025.4.0.398"
+      SP2_P3: "2025.3.0.317"
+      SP2: "2025.3.0.317"
+      SP1: "2025.2.0.241"
+      Release: "2025.1.0.184"
+    components:
+      zeiss_quality_suite:
+        name: "ZEISS Quality Suite"
+        versions: {"SP3": "7.0.2770.0", "SP2": "6.3.2518.0", "SP1": "6.3.2518.0", "Release": "6.2.2479.0"}
+        source: "ZEISS INSPECT 2025 Release Notes"
+      hardware_service:
+        name: "ZEISS Hardware Service"
+        versions: {"SP3": "1.0.2.0", "SP2": "1.0.2.0", "SP1": "1.0.2.0", "Release": "1.0.1.9"}
+        min_version: "1.0.1.9"
+        source: "ZEISS INSPECT 2025 Release Notes"
+        notes: "SP1+ uses ports 39000-39025 for device communication"
+      image_acquisition_driver:
+        name: "Image Acquisition Driver (CVB)"
+        versions: {"SP3": "14.01.006", "SP2": "14.01.006", "SP1": "14.01.003", "Release": "14.01.001"}
+        min_version: "14.01.001"
+        source: "ZEISS INSPECT 2025 Release Notes"
+      camera_driver_aramis_24m:
+        name: "Camera Driver ARAMIS 24M (Emergent)"
+        versions: {"SP3": "2.44.02", "SP2": "2.44.02", "SP1": "2.44.02", "Release": "2.44.02"}
+        min_version: "2.44.02"
+        source: "ZEISS INSPECT 2025 Release Notes"
+      dotnet:
+        name: ".NET Runtime"
+        versions: {"SP3": "8.0.21", "SP2": "8.0.16", "SP1": "8.0.12", "Release": "8.0.10"}
+        min_version: "8.0.10"
+        source: "ZEISS INSPECT 2025 Release Notes"
+      vcredist:
+        name: "Microsoft Visual C++ 2015-2022 Redistributable (x64)"
+        min_version: "14.30"
+        source: "ZEISS INSPECT 2025 Release Notes"
+        notes: "Required by Hardware Service and other native components"
+      mellanox_winof2:
+        name: "Mellanox WinOF-2 (MLNX_WinOF2)"
+        min_version: "3.10.50000"
+        source: "Trilion field experience"
+      rivermax:
+        name: "Rivermax"
+        min_version: "1.20.10"
+        required_for: ["ARAMIS 24M"]
+        source: "Trilion field experience"
+      codemeter:
+        name: "CodeMeter Runtime"
+        min_version: "7.60"
+        source: "Trilion field experience"
+    os_requirements:
+      - "Windows 10 64-bit (min 1607), recommended 21H1+"
+      - "Windows 11 64-bit, recommended 22H2"
+    licensing_note: "2025 moved from WIBU CodeMeter to THALES licensing technology"
+    known_issues:
+      - id: zi2025_correlate_multicam
+        description: "CORRELATE 2025 does not support acquisition with multiple controllers. ZEISS recommends staying on 2023 for productive Correlate systems until a service pack."
+        affected_sp: ["Release"]
+      - id: zi2025_fg0004
+        description: "Connection problem after error FG-0004 during data acquisition (restart computer)"
+        affected_sp: ["Release"]
+      - id: zi2025_nvidia_553
+        description: "X-Ray systems may generate errors during volume capture due to faulty GPU driver. Install NVIDIA driver 553.24 to fix."
+        affected_sp: ["SP1"]
+      - id: zi2025_mellanox_cx6x
+        description: "Mellanox ConnectX 6X: 'Correct System' was setting wrong IP addresses (fixed in SP3)"
+        affected_sp: ["SP2", "SP1", "Release"]
+      - id: zi2025_broadcast_traffic
+        description: "Excessive broadcast traffic during software startup (fixed in SP1)"
+        affected_sp: ["Release"]
+
+  "2023":
+    display: "ZEISS INSPECT 2023"
+    service_packs:
+      SP5: "2023.7.0.87"
+      SP4: "2023.6.0.78"
+      SP3: "2023.5.0.68"
+      SP2: "2023.4.0.59"
+      SP1: "2023.3.0.51"
+      Release: "2023.2.0.43"
+    components:
+      zeiss_quality_suite:
+        name: "ZEISS Quality Suite"
+        versions: {"SP5": "6.2.2479", "SP4": "6.1.2462.0", "SP3": "5.3.2023.0", "SP2": "5.2.1990.0", "Release": "5.0.1945.0"}
+        source: "ZEISS INSPECT 2023 Release Notes"
+      hardware_service:
+        name: "ZEISS Hardware Service"
+        versions: {"SP5": "1.0.0.3", "SP4": "1.0.0.3", "Release": "1.0.0.3"}
+        min_version: "1.0.0.3"
+        source: "ZEISS INSPECT 2023 Release Notes"
+      image_acquisition_driver:
+        name: "Image Acquisition Driver (CVB)"
+        versions: {"SP5": "14.00.008", "SP4": "14.00.008", "Release": "14.00.006"}
+        min_version: "14.00.006"
+        source: "ZEISS INSPECT 2023 Release Notes"
+      camera_driver_aramis_24m:
+        name: "Camera Driver ARAMIS 24M (Emergent)"
+        versions: {"SP5": "2.44.02", "Release": "2.44.02"}
+        min_version: "2.44.02"
+        source: "ZEISS INSPECT 2023 Release Notes"
+        notes: "Updating from 2.36.02 to 2.44.02 requires uninstall first, then install"
+      codemeter:
+        name: "CodeMeter Runtime"
+        versions: {"SP5": "7.60d", "SP4": "7.60b", "Release": "7.60b"}
+        min_version: "7.60"
+        source: "ZEISS INSPECT 2023 Release Notes"
+      mellanox_winof2:
+        name: "Mellanox WinOF-2 (MLNX_WinOF2)"
+        min_version: "3.10.50000"
+        source: "Trilion field experience"
+    os_requirements:
+      - "Windows 10 64-bit (min 1607)"
+      - "Windows 11 64-bit 22H2 (recommended)"
+    known_issues:
+      - id: zi2023_mv1000_distance
+        description: "ATOS sensors with MV1000+ can lose connection when using distance indicator (disable distance indicator as workaround)"
+        affected_sp: ["SP4"]
+      - id: zi2023_aramis24m_driver_update
+        description: "ARAMIS 24M driver update from 2.36.02 to 2.44.02 requires uninstall first"
+        affected_sp: ["all"]
+
+# Rivermax configuration details
+rivermax:
+  license_path: 'C:\Program Files\Mellanox\Rivermax\lib\rivermax.lic'
+  install_path: 'C:\Program Files\Mellanox\Rivermax\'
+  lib_path: 'C:\Program Files\Mellanox\Rivermax\lib'
+  env_vars:
+    RIVERMAX_LOG_LEVEL: "6"
+    MELLANOX_RINGBUFF_FACTOR: "18"
+  notes: >
+    Rivermax is required for ARAMIS 24M streaming. If installed but the system
+    reports streaming errors, verify the license file exists at the license_path.
+    The RIVERMAX_LOG_LEVEL and MELLANOX_RINGBUFF_FACTOR environment variables
+    should be set in the system registry. Contact ZEISS support for a
+    replacement rivermax.lic if needed.
+
+# ZEISS Hardware Service (HAL) port map
+hardware_service:
+  full_name: "ZEISS INSPECT Hardware Server"
+  executable: "ZEISS_INSPECT_HardwareService.exe"
+  install_path: 'C:\Program Files\Zeiss\INSPECT-Hardware-Service\'
+  config_path: 'C:\ProgramData\Zeiss\HardwareServer\'
+  database: 'C:\ProgramData\Zeiss\HardwareServer\hardware_status.db'
+  manufacturer: "Carl Zeiss GOM Metrology GmbH"
+  ports:
+    "2025+":
+      - {port: 39000, service: "HAL Backend", protocol: "TCP", description: "Internal backend server (localhost)"}
+      - {port: 39001, service: "Web Management", protocol: "HTTP/WebSocket", description: "Hardware Service web interface for configuration"}
+      - {port: 39002, service: "gRPC", protocol: "gRPC", description: "Hardware service RPC -- ZEISS INSPECT connects here"}
+      - {port: 39003, service: "PStore", protocol: "TCP", description: "Project store / data buffer (SQLite-backed)"}
+      - {port: 39025, service: "Device Communication", protocol: "TCP", description: "Device communication port (MDM uses this for hardware connectivity)"}
+      - {port: 39035, service: "HAL CMD", protocol: "TCP", description: "Command interface for clients"}
+    "2023":
+      - {port: 50002, service: "gRPC", protocol: "gRPC", description: "Hardware service RPC (old port)"}
+  firewall_executables:
+    - path: "zeiss/inspect/2026/bin/zeiss_inspect_hardwareserver.exe"
+      description: "ZEISS INSPECT Hardware Server (acquisition engine)"
+    - path: "zeiss/inspect-hardware-service/bin/zeiss_inspect_hardwareservice.exe"
+      description: "ZEISS INSPECT Hardware Service (HAL daemon)"
+  notes: >
+    The port range changed from 50002 (ZEISS 2023) to 39000-39025 (ZEISS 2025+).
+    The web management interface at port 39001 allows selecting which Hardware
+    Service version is used with each ZEISS INSPECT version. If gRPC port 39002
+    is blocked by a stale process, ZEISS INSPECT will hang at "Connecting to
+    hardware servers." Port 39025 is used for device communication and is
+    required for the MDM web interface to function. Both firewall executables
+    must be allowed through Windows Firewall for hardware connectivity.
+
+# Cross-version notes
+cross_version_notes:
+  - "Both ZI 2023 SP5 and ZI 2025 SP1 ensure sensors can be operated alternately with later major versions"
+  - "Updating to at least these service pack levels is recommended if running multiple ZEISS INSPECT versions"
+  - "ZI 2025 moved from WIBU CodeMeter to THALES licensing technology"
+  - "Mellanox/Rivermax/NVIDIA GPU/CVB version requirements are from Trilion field experience, not ZEISS release notes"
