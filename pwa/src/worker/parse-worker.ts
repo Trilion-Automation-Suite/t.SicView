@@ -214,8 +214,8 @@ self.onmessage = async (e: MessageEvent<InMsg>) => {
 // ---- Product auto-detection ----
 
 function detectProduct(
-  licensing: ReturnType<LicensingParser['parse']>,
-  cameras: ReturnType<CamerasParser['parse']>,
+  licensing: ReturnType<LicensingParser['parse']> | undefined,
+  cameras: ReturnType<CamerasParser['parse']> | undefined,
 ): ProductType | undefined {
   const PRODUCT_PATTERNS: [RegExp, ProductType][] = [
     [/aramis.?24\s*m/i, 'ARAMIS 24M'],

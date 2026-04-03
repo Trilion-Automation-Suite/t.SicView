@@ -48,8 +48,8 @@ export class USBParser extends BaseParser<USBInfo> {
 
       // Skip rows that look like column headers
       if (
-        device.name.toLowerCase() === 'name' ||
-        device.name.toLowerCase() === 'item'
+        parts[0].toLowerCase() === 'name' ||
+        parts[0].toLowerCase() === 'item'
       ) {
         continue
       }

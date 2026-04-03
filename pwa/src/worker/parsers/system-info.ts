@@ -59,7 +59,7 @@ export class SystemInfoParser extends BaseParser<SystemInfo> {
       const value = row['Value'] ?? ''
       for (const [k, attr] of Object.entries(SYSTEM_FIELDS)) {
         if (item.includes(k) && !info[attr]) {
-          ;(info as Record<string, unknown>)[attr] = value
+          ;(info as unknown as Record<string, unknown>)[attr] = value
         }
       }
     }
