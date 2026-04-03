@@ -11,6 +11,16 @@
   padding: 18px 20px;
 }
 
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.section-title-row .section-title {
+  margin-bottom: 0;
+}
+
 .section-title {
   font-size: 14px;
   font-weight: 700;

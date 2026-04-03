@@ -10,13 +10,11 @@ import { CamerasPanel } from './CamerasPanel'
 import { LogsPanel } from './LogsPanel'
 import { ActivityPanel } from './ActivityPanel'
 import { RawPanel } from './RawPanel'
-import { VersionsPanel } from './VersionsPanel'
 import './ResultsView.css'
 
 const TABS = [
-  { id: 'findings', label: 'Findings' },
   { id: 'system', label: 'System' },
-  { id: 'versions', label: 'Versions' },
+  { id: 'findings', label: 'Findings' },
   { id: 'network', label: 'Network' },
   { id: 'licensing', label: 'Licensing' },
   { id: 'drivers', label: 'Drivers' },
@@ -34,7 +32,7 @@ interface Props {
 }
 
 export function ResultsView({ result }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>('findings')
+  const [activeTab, setActiveTab] = useState<TabId>('system')
 
   const criticalCount = result.findings.filter(f => f.severity === 'CRITICAL').length
   const warningCount = result.findings.filter(f => f.severity === 'WARNING').length
@@ -91,9 +89,8 @@ export function ResultsView({ result }: Props) {
 
       {/* Panel content */}
       <div className="results-panel-area" id={`panel-${activeTab}`} role="tabpanel">
-        {activeTab === 'findings' && <FindingsPanel result={result} />}
         {activeTab === 'system' && <SystemPanel result={result} />}
-        {activeTab === 'versions' && <VersionsPanel result={result} />}
+        {activeTab === 'findings' && <FindingsPanel result={result} />}
         {activeTab === 'network' && <NetworkPanel result={result} />}
         {activeTab === 'licensing' && <LicensingPanel result={result} />}
         {activeTab === 'drivers' && <DriversPanel result={result} />}

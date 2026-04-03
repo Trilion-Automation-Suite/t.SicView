@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ParseResult, Finding, Severity } from '../../worker/models'
 import './FindingsPanel.css'
 
@@ -57,7 +58,109 @@ export function FindingsPanel({ result }: Props) {
           </div>
         </section>
       ))}
+      <AiRecapCard result={result} />
     </div>
+  )
+}
+
+/* ---- AI Ready recap ---- */
+
+function buildAiRecap(result: ParseResult): string {
+  const { findings, system_info, zeiss_versions, product_type, detected_product,
+          network, licensing, drivers, hardware_service } = result
+
+  const product = detected_product ?? (product_type !== 'Unknown' ? product_type : null)
+  const lines: string[] = []
+
+  lines.push('# t.SicView Diagnostic Summary')
+  lines.push('')
+
+  // Identity
+  lines.push('## System Identity')
+  if (system_info?.computer_name) lines.push(`- Computer: ${system_info.computer_name}`)
+  if (system_info?.os_name)       lines.push(`- OS: ${system_info.os_name}${system_info.os_version ? ` (${system_info.os_version})` : ''}`)
+  if (system_info?.processor)     lines.push(`- CPU: ${system_info.processor}`)
+  if (system_info?.total_physical_memory) lines.push(`- RAM: ${system_info.total_physical_memory}`)
+  if (product) lines.push(`- Product: ${product}`)
+  if (zeiss_versions?.inspect_version)        lines.push(`- ZEISS INSPECT: ${zeiss_versions.inspect_version}`)
+  if (zeiss_versions?.hardware_service_version) lines.push(`- Hardware Service: ${zeiss_versions.hardware_service_version}`)
+  if (zeiss_versions?.quality_suite_version)  lines.push(`- Quality Suite: ${zeiss_versions.quality_suite_version}`)
+  lines.push('')
+
+  // Findings summary
+  const critical = findings.filter(f => f.severity === 'CRITICAL')
+  const warnings  = findings.filter(f => f.severity === 'WARNING')
+  const infos     = findings.filter(f => f.severity === 'INFO')
+
+  lines.push('## Diagnostic Findings')
+  lines.push(`Total: ${findings.length} (${critical.length} critical, ${warnings.length} warning, ${infos.length} info)`)
+  lines.push('')
+
+  for (const f of [...critical, ...warnings, ...infos]) {
+    lines.push(`### [${f.severity}] ${f.title}`)
+    lines.push(f.description)
+    if (f.recommendation) lines.push(`> Recommendation: ${f.recommendation}`)
+    if (f.source_file) lines.push(`> Source: ${f.source_file}`)
+    lines.push('')
+  }
+
+  // Quick context
+  if (network?.adapters && network.adapters.length > 0) {
+    lines.push('## Network Adapters')
+    for (const a of network.adapters) {
+      lines.push(`- ${a.name}${a.ip_addresses.length ? ': ' + a.ip_addresses.join(', ') : ''}`)
+    }
+    lines.push('')
+  }
+
+  if (drivers?.nvidia_driver)   lines.push(`- NVIDIA driver: ${drivers.nvidia_driver}`)
+  if (drivers?.mellanox_driver) lines.push(`- Mellanox driver: ${drivers.mellanox_driver}`)
+  if (drivers?.rivermax)        lines.push(`- Rivermax: ${drivers.rivermax}`)
+  if (drivers?.codemeter)       lines.push(`- CodeMeter: ${drivers.codemeter}`)
+
+  if (licensing?.licensed_products && licensing.licensed_products.length > 0) {
+    lines.push('')
+    lines.push('## Licensed Products')
+    for (const p of licensing.licensed_products) lines.push(`- ${p}`)
+  }
+
+  if (hardware_service?.grpc_status) {
+    lines.push('')
+    lines.push(`## Hardware Service`)
+    lines.push(`- gRPC status: ${hardware_service.grpc_status}`)
+    if (hardware_service.running != null) lines.push(`- Running: ${hardware_service.running}`)
+  }
+
+  if (system_info?.problem_devices.length) {
+    lines.push('')
+    lines.push('## Problem Devices')
+    for (const d of system_info.problem_devices) lines.push(`- ${d}`)
+  }
+
+  return lines.join('\n')
+}
+
+function AiRecapCard({ result }: { result: ParseResult }) {
+  const [copied, setCopied] = useState(false)
+  const text = buildAiRecap(result)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <section className="ai-recap-card card">
+      <div className="ai-recap-header">
+        <h3 className="ai-recap-title">AI-Ready Recap</h3>
+        <button className="ai-recap-copy-btn" onClick={handleCopy} title="Copy to clipboard">
+          {copied ? '✓ Copied' : '⎘ Copy'}
+        </button>
+      </div>
+      <pre className="ai-recap-text">{text}</pre>
+    </section>
   )
 }
 

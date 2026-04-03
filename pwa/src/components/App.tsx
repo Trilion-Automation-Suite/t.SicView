@@ -98,10 +98,7 @@ export function App() {
   return (
     <>
       <header className="app-header">
-        <svg className="header-logo" viewBox="0 0 120 32" aria-hidden="true">
-          <rect width="120" height="32" rx="4" fill="#25283d"/>
-          <text x="60" y="22" fontFamily="system-ui,sans-serif" fontWeight="700" fontSize="16" textAnchor="middle" fill="#cc0000">TRILION</text>
-        </svg>
+        <img src="/icons/weblogo.png" alt="Trilion" className="header-logo" />
         <span className="header-app-name">t.SicView</span>
         <span className="header-beta">BETA</span>
         <span className="header-subtitle">ZEISS Diagnostic Archive Viewer</span>

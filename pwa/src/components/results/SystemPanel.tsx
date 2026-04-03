@@ -13,11 +13,11 @@ interface Props {
 }
 
 export function SystemPanel({ result }: Props) {
-  const { system_info, zeiss_versions, codemeter, usb } = result
+  const { system_info, zeiss_versions, codemeter, usb, product_type, detected_product } = result
 
   return (
     <div className="system-panel">
-      <ZeissVersionsCard versions={zeiss_versions} />
+      <ZeissVersionsCard versions={zeiss_versions} productType={product_type} detectedProduct={detected_product} />
       {system_info && <SystemInfoCard info={system_info} />}
       {system_info && system_info.problem_devices.length > 0 && (
         <ProblemDevicesCard devices={system_info.problem_devices} />
@@ -29,6 +29,9 @@ export function SystemPanel({ result }: Props) {
         <DiskDrivesCard drives={codemeter.drives} />
       )}
       {usb && usb.devices.length > 0 && <USBCard usb={usb} />}
+      {zeiss_versions && Object.keys(zeiss_versions.raw_version_data).length > 0 && (
+        <RawVersionCard raw={zeiss_versions.raw_version_data} />
+      )}
     </div>
   )
 }
@@ -36,7 +39,15 @@ export function SystemPanel({ result }: Props) {
 /* ------------------------------------------------------------------ */
 /* ZEISS Versions                                                       */
 /* ------------------------------------------------------------------ */
-function ZeissVersionsCard({ versions }: { versions?: ZeissVersions }) {
+function ZeissVersionsCard({
+  versions,
+  productType,
+  detectedProduct,
+}: {
+  versions?: ZeissVersions
+  productType?: string
+  detectedProduct?: string
+}) {
   const rows: Array<{ label: string; value?: string }> = [
     { label: 'ZEISS INSPECT', value: versions?.inspect_version },
     { label: 'Hardware Service', value: versions?.hardware_service_version },
@@ -44,9 +55,17 @@ function ZeissVersionsCard({ versions }: { versions?: ZeissVersions }) {
     { label: 'Product Name', value: versions?.product_name },
   ]
 
+  const major = parseMajorVersion(versions?.inspect_version)
+  const effectiveProduct = detectedProduct ?? (productType !== 'Unknown' ? productType : undefined)
+  const mismatch = detectedProduct && productType && productType !== 'Unknown' && productType !== detectedProduct
+
   return (
     <section className="system-section card">
-      <h2 className="section-title">ZEISS Versions</h2>
+      <div className="section-title-row">
+        <h2 className="section-title">ZEISS Versions</h2>
+        {effectiveProduct && <span className="summary-chip">{effectiveProduct}</span>}
+        {major && <span className="summary-chip summary-chip-muted">v{major}</span>}
+      </div>
       <div className="versions-table-wrap">
         <table className="versions-table">
           <thead>
@@ -65,6 +84,32 @@ function ZeissVersionsCard({ versions }: { versions?: ZeissVersions }) {
           </tbody>
         </table>
       </div>
+      {mismatch && (
+        <p style={{ marginTop: 8, fontSize: 12, color: 'var(--severity-warning)' }}>
+          ⚠ Selected product "{productType}" differs from detected "{detectedProduct}"
+        </p>
+      )}
+    </section>
+  )
+}
+
+function parseMajorVersion(version?: string): string | null {
+  if (!version) return null
+  const match = version.match(/^(\d{4})/)
+  return match ? match[1] : null
+}
+
+function RawVersionCard({ raw }: { raw: Record<string, unknown> }) {
+  return (
+    <section className="system-section card">
+      <details>
+        <summary className="section-title" style={{ cursor: 'pointer', userSelect: 'none' }}>
+          Raw Version Data
+        </summary>
+        <pre style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          {JSON.stringify(raw, null, 2)}
+        </pre>
+      </details>
     </section>
   )
 }

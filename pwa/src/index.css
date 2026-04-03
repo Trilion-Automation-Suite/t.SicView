@@ -227,22 +227,30 @@ body {
   padding: 0 20px;
   height: 52px;
   background: var(--header-bg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
   z-index: 100;
+  /* Header is always dark — pin text to light values regardless of page theme */
+  --_h-text:       #e8eaf6;
+  --_h-muted:      #9ba3c0;
+  --_h-border:     rgba(75, 85, 130, 0.5);
+  --_h-accent:     #6c8ebf;
+  --_h-accent-bg:  rgba(108, 142, 191, 0.12);
+  --_h-warn:       #f0a040;
+  --_h-warn-bg:    rgba(240, 160, 64, 0.15);
+  --_h-warn-border:rgba(240, 160, 64, 0.3);
 }
 
 .header-logo {
-  height: 24px;
+  height: 28px;
   width: auto;
   flex-shrink: 0;
-  border-radius: 3px;
 }
 
 .header-app-name {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--_h-text);
   letter-spacing: -0.02em;
   font-family: "Segoe UI", system-ui, sans-serif;
 }
@@ -254,23 +262,23 @@ body {
   text-transform: uppercase;
   padding: 2px 7px;
   border-radius: 10px;
-  background: rgba(240, 160, 64, 0.15);
-  color: var(--severity-warning);
-  border: 1px solid rgba(240, 160, 64, 0.3);
+  background: var(--_h-warn-bg);
+  color: var(--_h-warn);
+  border: 1px solid var(--_h-warn-border);
   flex-shrink: 0;
 }
 
 .header-subtitle {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--_h-muted);
   flex-shrink: 0;
 }
 
 .header-filename {
   font-size: 12px;
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border: 1px solid var(--border);
+  color: var(--_h-accent);
+  background: var(--_h-accent-bg);
+  border: 1px solid var(--_h-border);
   border-radius: 4px;
   padding: 2px 8px;
   max-width: 320px;
@@ -284,6 +292,25 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Buttons inside the header always render on a dark background */
+.app-header .btn-ghost {
+  color: var(--_h-muted);
+  border-color: var(--_h-border);
+}
+.app-header .btn-ghost:hover {
+  color: var(--_h-text);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--_h-accent);
+}
+.app-header .theme-toggle {
+  color: var(--_h-muted);
+  border-color: var(--_h-border);
+}
+.app-header .theme-toggle:hover {
+  color: var(--_h-text);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* ============================================================

@@ -28,7 +28,8 @@ const iconDir = join(root, 'public', 'icons')
 mkdirSync(iconDir, { recursive: true })
 
 const iconSources = [
-  [join(repoRoot, 'standalone', 'assets', 'icon.ico'), join(iconDir, 'trilion-web.ico')],
+  [join(repoRoot, 'standalone', 'assets', 'trilion-web.ico'), join(iconDir, 'trilion-web.ico')],
+  [join(repoRoot, 'standalone', 'assets', 'weblogo.png'),     join(iconDir, 'weblogo.png')],
 ]
 for (const [src, dest] of iconSources) {
   if (existsSync(src)) {
