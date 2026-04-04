@@ -312,6 +312,15 @@ body {
   color: var(--_h-text);
   background: rgba(255, 255, 255, 0.07);
 }
+.app-header .btn-icon {
+  color: var(--_h-muted);
+  border-color: var(--_h-border);
+}
+.app-header .btn-icon:hover {
+  color: var(--_h-text);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--_h-accent);
+}
 
 /* ============================================================
    Buttons
@@ -381,6 +390,29 @@ body {
 .theme-toggle:hover {
   background: var(--accent-hover);
   color: var(--text-primary);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-icon:hover {
+  background: var(--accent-hover);
+  color: var(--text-primary);
+}
+.btn-icon:focus-visible {
+  outline: 2px solid var(--accent, #cc0000);
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -467,4 +499,33 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ============================================================
+   Print / Export to PDF
+   ============================================================ */
+@media print {
+  @page { margin: 15mm; }
+  header.app-header .header-actions,
+  footer.app-footer,
+  .btn-ghost, .btn-icon, .theme-toggle {
+    display: none !important;
+  }
+  body, html {
+    background: #fff !important;
+    color: #1a1a1a !important;
+  }
+  .app-header {
+    background: #fff !important;
+    border-bottom: 2px solid #cc0000 !important;
+    color: #1a1a1a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .app-header * { color: #1a1a1a !important; }
+  .app-main { overflow: visible !important; }
+  .card, .nic-group, .finding, .result-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
