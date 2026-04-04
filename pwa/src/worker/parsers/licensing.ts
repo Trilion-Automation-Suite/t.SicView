@@ -86,29 +86,14 @@ export class LicensingParser extends BaseParser<LicenseInfo> {
       const text = this.getText(layout, vpath)
       if (!text) return false
 
-      // KEY=VALUE format, each line → DongleInfo
+      // KEY=VALUE format: "WIBU=3-7335918" → { dongle_type: 'WIBU', serial: '3-7335918' }
       for (const line of text.split(/\r?\n/)) {
         const stripped = line.trim()
         if (!stripped || !stripped.includes('=')) continue
         const eqIdx = stripped.indexOf('=')
-        const key = stripped.slice(0, eqIdx).trim()
-        const value = stripped.slice(eqIdx + 1).trim()
-        const dongle: DongleInfo = {}
-        const keyLower = key.toLowerCase()
-        if (keyLower.includes('type') || keyLower.includes('dongle_type')) {
-          dongle.dongle_type = value
-        } else if (
-          keyLower.includes('serial') ||
-          keyLower.includes('id') ||
-          keyLower.includes('number')
-        ) {
-          dongle.serial = value
-        } else {
-          // Generic: treat key as type
-          dongle.dongle_type = key
-          dongle.serial = value
-        }
-        result.dongles.push(dongle)
+        const dtype = stripped.slice(0, eqIdx).trim()
+        const serial = stripped.slice(eqIdx + 1).trim()
+        result.dongles.push({ dongle_type: dtype, serial })
       }
       return result.dongles.length > 0
     }
@@ -185,35 +170,93 @@ export class LicensingParser extends BaseParser<LicenseInfo> {
       }
     }
 
-    // 5. App log fallback: parse [license] lines from ZEISS_INSPECT-*.log
-    if (gomsicDir && result.licenses.length === 0) {
+    // 5. App log fallback: parse [license] lines from ZEISS_INSPECT-*.log,
+    //    gomsoftware-current.log, gomsoftware*.log (mirrors Python _parse_app_log_licenses)
+    if (result.licenses.length === 0 && result.dongles.length === 0) {
       const logDir = gomsicLogDir(layout)
       if (logDir) {
-        const logFiles = this.findFiles(layout, logDir, 'ZEISS_INSPECT-*.log')
-        for (const vpath of logFiles) {
+        const seen = new Set<string>()
+        const candidates: string[] = []
+        for (const pat of ['ZEISS_INSPECT-*.log', 'gomsoftware-current.log', 'gomsoftware*.log']) {
+          for (const vpath of this.findFiles(layout, logDir, pat)) {
+            if (!seen.has(vpath)) { seen.add(vpath); candidates.push(vpath) }
+          }
+        }
+
+        for (const vpath of candidates) {
           const text = this.getText(layout, vpath)
           if (!text) continue
-          const licenseLineRe = /\[license\]\s+(.+)/gi
-          let lm: RegExpExecArray | null
-          while ((lm = licenseLineRe.exec(text)) !== null) {
-            const line = lm[1].trim()
-            // Try to extract a product name from license lines
-            const productMatch = line.match(/product[:\s]+([^\s,]+)/i)
-            const keyMatch = line.match(/key[:\s]+([^\s,]+)/i)
-            const entry: LicenseEntry = {
-              raw_fields: { log_line: line },
-            }
-            if (productMatch) entry.product = productMatch[1]
-            if (keyMatch) entry.key = keyMatch[1]
-            if (entry.product || entry.key) {
-              result.licenses.push(entry)
-              foundSomething = true
-              if (entry.product && !result.licensed_products.includes(entry.product)) {
-                result.licensed_products.push(entry.product)
-              }
-            }
+
+          // [license] Dongles changed event: [WIBU=3-7335918]
+          const dongleMatch = text.match(/\[license\] Dongles changed event: \[(\w+)=([^\]]+)\]/)
+          if (dongleMatch && result.dongles.length === 0) {
+            result.dongles.push({ dongle_type: dongleMatch[1], serial: dongleMatch[2] })
+            foundSomething = true
           }
-          if (result.licenses.length > 0) break
+
+          // [license] Successfully consumed Z_INSPECT_correlate (2026) from no-net.
+          const consumedRe = /\[license\] Successfully consumed (\S+) \((\d+)\) from (\S+)/g
+          let cm: RegExpExecArray | null
+          while ((cm = consumedRe.exec(text)) !== null) {
+            const feat = cm[1], year = cm[2], server = cm[3]
+            const name = feat.replace(/^Z_INSPECT_/, '').replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())
+            const entry: LicenseEntry = {
+              product: `ZEISS INSPECT ${name}`,
+              version: year,
+              license_type: `Thales RMS (${server})`,
+              raw_fields: { feature: feat, server },
+            }
+            result.licenses.push(entry)
+            foundSomething = true
+            if (!result.licensed_products.includes(name)) result.licensed_products.push(name)
+          }
+
+          // [license] On demand licenses (2): sensor-aramis,sensor-aramis-24m
+          const onDemandMatch = text.match(/\[license\] On demand licenses \(\d+\): (.+)/)
+          if (onDemandMatch) {
+            for (const feat of onDemandMatch[1].split(',')) {
+              const name = feat.trim().replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+              const label = `${name} (on demand)`
+              if (!result.licensed_products.includes(label)) result.licensed_products.push(label)
+            }
+            foundSomething = true
+          }
+
+          if (result.licenses.length > 0 || result.dongles.length > 0) break
+        }
+      }
+    }
+
+    // 6. Last resort: scan all *.log files in gomsicDir for dongle/license patterns
+    if (!foundSomething && result.licenses.length === 0 && result.dongles.length === 0 && gomsicDir) {
+      const allLogs = this.findFiles(layout, gomsicDir, '*.log')
+      for (const vpath of allLogs) {
+        const text = this.getText(layout, vpath)
+        if (!text) continue
+        if (/found dongle|license.*package|consuming license/i.test(text)) {
+          // Re-use license_info.log parsing logic
+          const dongleM = text.match(/found dongle '([^']+)'/)
+          if (dongleM && result.dongles.length === 0) {
+            result.dongles.push({ dongle_type: 'WIBU', serial: dongleM[1] })
+            foundSomething = true
+          }
+          const packageRe = /^\d{2}:\d{2}:\d{2}\s{4,}(.+?)\s+\((\d+),\s*([^)]+)\)/gm
+          let pm: RegExpExecArray | null
+          while ((pm = packageRe.exec(text)) !== null) {
+            const productName = pm[1].trim()
+            const expiry = pm[3].trim()
+            const entry: LicenseEntry = {
+              product: productName,
+              expiry: expiry === 'never expires' ? 'Permanent' : expiry,
+              license_type: 'CodeMeter',
+              raw_fields: { quantity: pm[2] },
+            }
+            result.licenses.push(entry)
+            foundSomething = true
+            if (!result.licensed_products.includes(productName)) result.licensed_products.push(productName)
+          }
+          if (foundSomething) break
         }
       }
     }

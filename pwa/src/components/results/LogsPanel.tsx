@@ -1,4 +1,5 @@
-import type { ParseResult, LogEntry, LogFileEntry } from '../../worker/models'
+import { useState } from 'react'
+import type { ParseResult, LogFileEntry } from '../../worker/models'
 import './Results.css'
 
 interface Props {
@@ -56,104 +57,56 @@ export function LogsPanel({ result }: Props) {
         </section>
       )}
 
-      {/* Log entries */}
-      {logs && logs.entries.length > 0 && (
-        <LogEntriesCard entries={logs.entries} />
-      )}
     </div>
   )
 }
 
 /* ---- Log File Card ---- */
 function LogFileCard({ file }: { file: LogFileEntry }) {
+  const [open, setOpen] = useState(false)
   const sizeKb = (file.size_bytes / 1024).toFixed(1)
 
   return (
-    <details className="panel-details">
-      <summary>
-        <div className="log-file-header">
+    <div className="log-file-card">
+      <div className="log-file-row">
+        <div className="log-file-info">
           <span className="log-file-name">{file.filename}</span>
+          <span className="log-file-stats">
+            {file.line_count.toLocaleString()} lines · {sizeKb} KB
+            {file.first_timestamp && ` · ${file.first_timestamp}`}
+          </span>
+          {file.description && (
+            <span className="log-file-desc">{file.description}</span>
+          )}
+        </div>
+        <div className="log-file-badges">
           {file.has_errors && <span className="badge badge-critical">Errors</span>}
           {file.has_warnings && <span className="badge badge-warning">Warnings</span>}
+          {file.content && (
+            <button className="btn-open-log" onClick={() => setOpen((v) => !v)}>
+              {open ? 'Close' : 'Open'}
+            </button>
+          )}
         </div>
-      </summary>
-      <div className="details-body">
-        {file.description && (
-          <p className="log-file-desc" style={{ marginBottom: 8 }}>{file.description}</p>
-        )}
-        <div className="log-file-meta">
-          <span>{file.line_count.toLocaleString()} lines</span>
-          <span>{sizeKb} KB</span>
-          {file.first_timestamp && <span>First: {file.first_timestamp}</span>}
-          {file.last_timestamp && <span>Last: {file.last_timestamp}</span>}
-        </div>
-        {file.content && (
-          <pre className="log-content" style={{ marginTop: 8 }}>
-            {file.content.slice(0, 8000)}
-            {file.content.length > 8000 && '\n\n[... truncated ...]'}
+      </div>
+      {open && file.content && (
+        <div className="log-file-viewer">
+          <div className="log-file-viewer-toolbar">
+            <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+              {file.path}
+            </span>
+            <button
+              className="btn-copy-log"
+              onClick={() => navigator.clipboard.writeText(file.content!)}
+            >
+              Copy
+            </button>
+          </div>
+          <pre className="log-content">
+            {file.content.slice(0, 100_000)}
+            {file.content.length > 100_000 && '\n\n[... truncated — first 100 000 chars shown ...]'}
           </pre>
-        )}
-      </div>
-    </details>
-  )
-}
-
-/* ---- Log Entries ---- */
-function LogEntriesCard({ entries }: { entries: LogEntry[] }) {
-  const visible = entries.slice(0, 100)
-
-  return (
-    <section className="card">
-      <h2 className="panel-heading">
-        Log Entries (showing {visible.length} of {entries.length})
-      </h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {visible.map((entry, i) => (
-          <LogEntryRow key={i} entry={entry} />
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function LogEntryRow({ entry }: { entry: LogEntry }) {
-  const level = (entry.level ?? '').toLowerCase()
-  const cardClass =
-    level === 'error' || level === 'critical'
-      ? 'log-entry log-entry--error'
-      : level === 'warning' || level === 'warn'
-      ? 'log-entry log-entry--warning'
-      : 'log-entry log-entry--info'
-
-  const badgeClass =
-    level === 'error' || level === 'critical'
-      ? 'badge badge-critical'
-      : level === 'warning' || level === 'warn'
-      ? 'badge badge-warning'
-      : 'badge badge-info'
-
-  const contextLines = [
-    ...(entry.context_before ?? []),
-    ...(entry.context_after ?? []),
-  ]
-
-  return (
-    <div className={cardClass}>
-      <div className="log-entry-header">
-        {entry.level && <span className={badgeClass}>{entry.level}</span>}
-        <span className="log-entry-source">{entry.source_file}</span>
-        {entry.line_number != null && (
-          <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>:{entry.line_number}</span>
-        )}
-        {entry.timestamp && (
-          <span style={{ fontSize: 10, color: 'var(--text-faint)', marginLeft: 'auto' }}>
-            {entry.timestamp}
-          </span>
-        )}
-      </div>
-      <div className="log-entry-message">{entry.message}</div>
-      {contextLines.length > 0 && (
-        <pre className="log-entry-context">{contextLines.join('\n')}</pre>
+        </div>
       )}
     </div>
   )

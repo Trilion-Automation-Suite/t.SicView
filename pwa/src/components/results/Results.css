@@ -637,14 +637,36 @@ details.panel-details .details-body {
 .log-file-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.log-file-header {
+.log-file-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.log-file-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+}
+
+.log-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.log-file-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .log-file-name {
@@ -652,11 +674,68 @@ details.panel-details .details-body {
   font-size: 12px;
   color: var(--text-primary);
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.log-file-stats {
+  font-size: 11px;
+  color: var(--text-faint);
 }
 
 .log-file-desc {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.btn-open-log {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.btn-open-log:hover {
+  background: var(--accent-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.log-file-viewer {
+  border-top: 1px solid var(--border);
+}
+
+.log-file-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: var(--bg-card-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.btn-copy-log {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.btn-copy-log:hover {
+  background: var(--accent-hover);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .log-file-meta {

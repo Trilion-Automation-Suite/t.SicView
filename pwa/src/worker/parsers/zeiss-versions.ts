@@ -70,9 +70,11 @@ export class ZeissVersionsParser extends BaseParser<ZeissVersions> {
         if (!text) continue
         try {
           const data = JSON.parse(text) as Record<string, unknown>
-          const version = this._extractVersion(data)
+          // Python reads: data.get("software", {}).get("majorVersion")
+          const sw = data['software'] as Record<string, unknown> | undefined
+          const version = sw?.['majorVersion'] as string | undefined ?? this._extractVersion(data)
           if (version) {
-            result.quality_suite_version = version
+            result.quality_suite_version = String(version)
             result.raw_version_data['zqs_json'] = data
           }
           break
@@ -106,35 +108,58 @@ export class ZeissVersionsParser extends BaseParser<ZeissVersions> {
     }
 
     // 5. Fallback: parse registry.log
+    // Python: re.search(r"ZEISS.INSPECT.*?DisplayVersion\s+REG_SZ\s+([\d.]+)", text, re.DOTALL)
     if (!result.inspect_version && gomsicDir) {
       const registryPath = `${gomsicDir}/registry.log`
       const text = this.getText(layout, registryPath)
       if (text) {
+        // Use [\s\S]*? to span lines (equivalent to Python re.DOTALL)
         const regMatch = text.match(
-          /ZEISS\.INSPECT[.\w]*DisplayVersion\s+REG_SZ\s+([\d.]+)/i,
+          /ZEISS[\s\S]{0,300}?INSPECT[\s\S]{0,500}?DisplayVersion\s+REG_SZ\s+([\d.]+)/i,
         )
         if (regMatch) {
           result.inspect_version = regMatch[1]
           result.raw_version_data['registry_log'] = regMatch[0]
         }
+        // Hardware Service version from registry
+        if (!result.hardware_service_version) {
+          const hwMatch = text.match(
+            /Hardware[\s\S]{0,200}?Service[\s\S]{0,500}?DisplayVersion\s+REG_SZ\s+([\d.]+)/i,
+          )
+          if (hwMatch) {
+            result.hardware_service_version = hwMatch[1]
+          }
+        }
       }
     }
 
     // 6. Fallback: parse first 3000 chars of ZEISS_INSPECT-*.log
-    if (!result.inspect_version && gomsicDir) {
+    if ((!result.inspect_version || !result.product_name) && gomsicDir) {
       const logDir = gomsicLogDir(layout)
       if (logDir) {
         const logFiles = this.findFiles(layout, logDir, 'ZEISS_INSPECT-*.log')
         for (const vpath of logFiles) {
           const bytes = layout.files.get(vpath)
           if (!bytes) continue
-          const text = this.decodeAuto(bytes.slice(0, 3000))
-          const verMatch = text.match(/Version:\s+(20\d{2}\.\d+\.\d+\.\d+)/)
-          if (verMatch) {
-            result.inspect_version = verMatch[1]
-            result.raw_version_data['app_log'] = verMatch[0]
-            break
+          const header = this.decodeAuto(bytes.slice(0, 3000))
+          if (!result.inspect_version) {
+            const verMatch = header.match(/Version:\s+(20\d{2}\.\d+\.\d+\.\d+)/)
+            if (verMatch) {
+              result.inspect_version = verMatch[1]
+              result.raw_version_data['app_log'] = verMatch[0]
+            }
           }
+          // "Command line: ...ZEISS_INSPECT.exe -license correlate_all"
+          if (!result.product_name) {
+            const cmdMatch = header.match(/Command line:.*?-license\s+(\S+)/i)
+            if (cmdMatch) {
+              const licMode = cmdMatch[1].toLowerCase()
+              if (licMode.includes('correlate')) {
+                result.product_name = 'ZEISS CORRELATE'
+              }
+            }
+          }
+          break
         }
       }
     }

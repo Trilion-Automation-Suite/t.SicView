@@ -171,7 +171,7 @@ self.onmessage = async (e: MessageEvent<InMsg>) => {
     const result: ParseResult = {
       archive_filename: filename,
       parsed_at: new Date().toISOString(),
-      tool_version: '0.1.0',
+      tool_version: '0.3.0',
       product_type: (product as ProductType) || 'Unknown',
       detected_product: detectedProduct,
       user_description: description ?? undefined,
