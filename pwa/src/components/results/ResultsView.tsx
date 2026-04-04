@@ -40,51 +40,49 @@ export function ResultsView({ result }: Props) {
 
   return (
     <div className="results-view">
-      {/* Summary bar */}
-      <div className="results-summary-bar">
-        <div className="summary-meta">
-          {result.product_type && result.product_type !== 'Unknown' && (
-            <span className="summary-chip">{result.product_type}</span>
-          )}
-          {result.tool_version && (
-            <span className="summary-chip summary-chip-muted">Parser {result.tool_version}</span>
-          )}
-        </div>
-        <div className="summary-counts">
-          {criticalCount > 0 && (
-            <span className="badge badge-critical">{criticalCount} Critical</span>
-          )}
-          {warningCount > 0 && (
-            <span className="badge badge-warning">{warningCount} Warning</span>
-          )}
-          {infoCount > 0 && (
-            <span className="badge badge-info">{infoCount} Info</span>
-          )}
-          {result.findings.length === 0 && (
-            <span className="badge badge-ok">No findings</span>
-          )}
-        </div>
-      </div>
-
-      {/* Tab bar */}
+      {/* Tab bar + severity pills */}
       <div className="results-tabs-wrap">
-        <nav className="tab-bar" role="tablist" aria-label="Result sections">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              className={`tab-btn${activeTab === tab.id ? ' active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-              {tab.id === 'findings' && result.findings.length > 0 && (
-                <span className="tab-count">{result.findings.length}</span>
-              )}
-            </button>
-          ))}
-        </nav>
+        {result.product_type && result.product_type !== 'Unknown' && (
+          <div className="results-product-row">
+            <span className="summary-chip">{result.product_type}</span>
+            {result.detected_product && result.detected_product !== result.product_type && (
+              <span className="summary-chip summary-chip-muted">detected: {result.detected_product}</span>
+            )}
+          </div>
+        )}
+        <div className="results-tabrow">
+          <nav className="tab-bar" role="tablist" aria-label="Result sections">
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                className={`tab-btn${activeTab === tab.id ? ' active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+                {tab.id === 'findings' && result.findings.length > 0 && (
+                  <span className="tab-count">{result.findings.length}</span>
+                )}
+              </button>
+            ))}
+          </nav>
+          <div className="tab-bar-findings">
+            {criticalCount > 0 && (
+              <span className="badge badge-critical">{criticalCount} Critical</span>
+            )}
+            {warningCount > 0 && (
+              <span className="badge badge-warning">{warningCount} Warning</span>
+            )}
+            {infoCount > 0 && (
+              <span className="badge badge-info">{infoCount} Info</span>
+            )}
+            {result.findings.length === 0 && (
+              <span className="badge badge-ok">No findings</span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Panel content */}

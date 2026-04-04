@@ -4,6 +4,8 @@ import type {
   ZeissVersions,
   StorageDrive,
   USBInfo,
+  LicenseInfo,
+  DriverInfo,
 } from '../../worker/models'
 import './SystemPanel.css'
 import './Results.css'
@@ -13,11 +15,26 @@ interface Props {
 }
 
 export function SystemPanel({ result }: Props) {
-  const { system_info, zeiss_versions, codemeter, usb, product_type, detected_product } = result
+  const { system_info, zeiss_versions, codemeter, usb, product_type, detected_product, licensing, drivers } = result
+
+  // Prefer the full version from InstalledPrograms.log (e.g. 7.0.2770.0) over JSON majorVersion ("7")
+  const zqsFromDrivers = drivers?.all_relevant_drivers.find((d) =>
+    /ZEISS\s+Quality\s+Suite/i.test(d.name),
+  )?.version
+
+  const enrichedVersions: ZeissVersions | undefined = zeiss_versions
+    ? {
+        ...zeiss_versions,
+        quality_suite_version: zqsFromDrivers ?? zeiss_versions.quality_suite_version,
+      }
+    : undefined
 
   return (
     <div className="system-panel">
-      <ZeissVersionsCard versions={zeiss_versions} productType={product_type} detectedProduct={detected_product} />
+      {licensing && (licensing.dongles.length > 0 || licensing.licensed_products.length > 0) && (
+        <DongleCard licensing={licensing} />
+      )}
+      <ZeissVersionsCard versions={enrichedVersions} productType={product_type} detectedProduct={detected_product} />
       {system_info && <SystemInfoCard info={system_info} />}
       {system_info && system_info.problem_devices.length > 0 && (
         <ProblemDevicesCard devices={system_info.problem_devices} />
@@ -243,6 +260,32 @@ function USBCard({ usb }: { usb: USBInfo }) {
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Dongle / License Identity                                            */
+/* ------------------------------------------------------------------ */
+function DongleCard({ licensing }: { licensing: LicenseInfo }) {
+  return (
+    <section className="system-section card">
+      <h2 className="section-title">License &amp; Dongle</h2>
+      <dl className="info-grid">
+        {licensing.dongles.map((d, i) => (
+          <KVRow
+            key={`dongle-${i}`}
+            label={d.dongle_type ? `Dongle (${d.dongle_type})` : 'Dongle'}
+            value={d.serial}
+          />
+        ))}
+        {licensing.licensed_products.length > 0 && (
+          <KVRow
+            label="Licensed Products"
+            value={licensing.licensed_products.join(' · ')}
+          />
+        )}
+      </dl>
     </section>
   )
 }

@@ -37,11 +37,19 @@ type KeyDriver = {
 }
 
 function KeyDriversCard({ drivers }: { drivers: DriverInfo }) {
+  const find = (re: RegExp): InstalledDriver | undefined =>
+    drivers.all_relevant_drivers.find((d) => re.test(d.name))
+
+  const cvb = find(/Common\s+Vision\s+Blox/i)
+  const zqs = find(/ZEISS\s+Quality\s+Suite/i)
+
   const keys: Array<{ label: string; version?: string }> = [
-    { label: 'NVIDIA Driver', version: drivers.nvidia_driver },
-    { label: 'Mellanox Driver', version: drivers.mellanox_driver },
-    { label: 'Rivermax', version: drivers.rivermax },
-    { label: 'CodeMeter', version: drivers.codemeter },
+    { label: 'NVIDIA Driver',        version: drivers.nvidia_driver },
+    { label: 'Mellanox Driver',      version: drivers.mellanox_driver },
+    { label: 'Rivermax',             version: drivers.rivermax },
+    { label: 'CodeMeter',            version: drivers.codemeter },
+    { label: 'Common Vision Blox',   version: cvb?.version },
+    { label: 'ZEISS Quality Suite',  version: zqs?.version },
   ]
 
   return (

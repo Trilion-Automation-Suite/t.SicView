@@ -26,13 +26,13 @@ function classifyFile(filename: string): string {
 }
 
 const GROUP_META: Record<string, { label: string; description: string }> = {
-  zeiss_inspect: { label: 'ZEISS INSPECT',           description: 'Main application logs' },
-  zi_acq:        { label: 'Acquisition (zi_acq)',     description: 'ZEISS 2026 acquisition session logs' },
+  zeiss_inspect: { label: 'ZEISS INSPECT',             description: 'Main application logs' },
+  zi_acq:        { label: 'Acquisition (zi_acq)',       description: 'ZEISS 2026 acquisition session logs' },
   'gom-hal':     { label: 'Hardware Abstraction Layer', description: 'HAL / hardware driver logs' },
-  'gom-acq':     { label: 'GOM Acquisition',          description: 'GOM acquisition controller logs' },
-  gomsoftware:   { label: 'GOM Software',             description: 'GOM software platform logs' },
-  'gom-other':   { label: 'GOM (other)',              description: 'Other GOM subsystem logs' },
-  other:         { label: 'Other',                    description: 'Uncategorised log files' },
+  'gom-acq':     { label: 'GOM Acquisition',            description: 'GOM acquisition controller logs' },
+  gomsoftware:   { label: 'GOM Software',               description: 'GOM software platform logs' },
+  'gom-other':   { label: 'GOM (other)',                description: 'Other GOM subsystem logs' },
+  other:         { label: 'Other',                      description: 'Uncategorised log files' },
 }
 
 const GROUP_ORDER = ['zeiss_inspect', 'zi_acq', 'gom-hal', 'gom-acq', 'gomsoftware', 'gom-other', 'other']
@@ -57,7 +57,7 @@ function buildGroups(files: LogFileEntry[]): LogGroup[] {
 export function LogsPanel({ result }: Props) {
   const { logs, log_inventory } = result
 
-  const hasLogs = logs != null
+  const hasLogs     = logs != null
   const hasInventory = log_inventory != null && log_inventory.files.length > 0
 
   if (!hasLogs && !hasInventory) {
@@ -65,14 +65,32 @@ export function LogsPanel({ result }: Props) {
   }
 
   const groups = hasInventory ? buildGroups(log_inventory!.files) : []
+  const [openStates, setOpenStates] = useState<boolean[]>(() => groups.map(() => false))
+
+  const allOpen  = openStates.length > 0 && openStates.every(Boolean)
+  const allClose = openStates.every((v) => !v)
+
+  const toggleGroup = (i: number) =>
+    setOpenStates((prev) => prev.map((v, j) => (j === i ? !v : v)))
+
+  const expandAll  = () => setOpenStates(groups.map(() => true))
+  const collapseAll = () => setOpenStates(groups.map(() => false))
 
   return (
     <div className="panel-stack">
-      {/* Summary */}
+      {/* Summary + controls */}
       {logs && (
         <section className="card">
-          <h2 className="panel-heading">Summary</h2>
-          <div className="stat-summary">
+          <div className="log-panel-header">
+            <h2 className="panel-heading" style={{ margin: 0 }}>Summary</h2>
+            {groups.length > 1 && (
+              <div className="log-expand-controls">
+                <button className="btn-log-ctrl" onClick={expandAll}  disabled={allOpen}>Expand all</button>
+                <button className="btn-log-ctrl" onClick={collapseAll} disabled={allClose}>Collapse all</button>
+              </div>
+            )}
+          </div>
+          <div className="stat-summary" style={{ marginTop: 12 }}>
             <div className="stat-item">
               <span className="stat-label">Total Errors</span>
               <span className={`stat-value${logs.total_errors > 0 ? ' stat-value--critical' : ''}`}>
@@ -94,8 +112,13 @@ export function LogsPanel({ result }: Props) {
       )}
 
       {/* Grouped log files */}
-      {groups.map((group) => (
-        <LogGroupSection key={group.label} group={group} />
+      {groups.map((group, i) => (
+        <LogGroupSection
+          key={group.label}
+          group={group}
+          open={openStates[i] ?? false}
+          onToggle={() => toggleGroup(i)}
+        />
       ))}
     </div>
   )
@@ -103,27 +126,33 @@ export function LogsPanel({ result }: Props) {
 
 // ---- Log Group Section ----
 
-function LogGroupSection({ group }: { group: LogGroup }) {
-  const [open, setOpen] = useState(true)
-
-  const errorCount  = group.files.filter((f) => f.has_errors).length
-  const warnCount   = group.files.filter((f) => f.has_warnings).length
+function LogGroupSection({
+  group,
+  open,
+  onToggle,
+}: {
+  group: LogGroup
+  open: boolean
+  onToggle: () => void
+}) {
+  const errorCount = group.files.filter((f) => f.has_errors).length
+  const warnCount  = group.files.filter((f) => f.has_warnings).length
 
   return (
     <section className="card log-group">
-      <button className="log-group-header" onClick={() => setOpen((v) => !v)}>
-        <span className="log-group-chevron">{open ? '▾' : '▸'}</span>
+      <button className="log-group-header" onClick={onToggle}>
+        <span className="log-group-chevron" aria-hidden>{open ? '▼' : '▶'}</span>
         <span className="log-group-label">{group.label}</span>
         <span className="log-group-count">{group.files.length} file{group.files.length !== 1 ? 's' : ''}</span>
-        {errorCount  > 0 && <span className="badge badge-critical">{errorCount} w/ errors</span>}
-        {warnCount   > 0 && <span className="badge badge-warning">{warnCount} w/ warnings</span>}
+        {errorCount > 0 && <span className="badge badge-critical">{errorCount} w/ errors</span>}
+        {warnCount  > 0 && <span className="badge badge-warning">{warnCount} w/ warnings</span>}
         <span className="log-group-desc">{group.description}</span>
       </button>
 
       {open && (
         <div className="log-file-list">
-          {group.files.map((file, i) => (
-            <LogFileCard key={i} file={file} />
+          {group.files.map((file, j) => (
+            <LogFileCard key={j} file={file} />
           ))}
         </div>
       )}

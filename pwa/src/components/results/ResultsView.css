@@ -8,24 +8,6 @@
   overflow: hidden;
 }
 
-/* Summary bar */
-.results-summary-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 20px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.summary-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .summary-chip {
   display: inline-flex;
   align-items: center;
@@ -43,18 +25,39 @@
   color: var(--text-muted);
 }
 
-.summary-counts {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 /* Tabs wrapper */
 .results-tabs-wrap {
-  padding: 10px 20px 0;
+  padding: 8px 20px 0;
   flex-shrink: 0;
   background: var(--bg-page);
+}
+
+.results-product-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 8px;
+}
+
+/* Tab row: tabs left, severity pills right */
+.results-tabrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.results-tabrow .tab-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab-bar-findings {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tab-count {

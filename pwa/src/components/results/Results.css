@@ -657,9 +657,45 @@ details.panel-details .details-body {
   background: var(--bg-card-alt);
 }
 
-.log-group-chevron {
+.log-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.log-expand-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-log-ctrl {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
   font-size: 11px;
-  color: var(--text-faint);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.btn-log-ctrl:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-log-ctrl:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.log-group-chevron {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
   flex-shrink: 0;
 }
 
