@@ -6,6 +6,54 @@ interface Props {
   result: ParseResult
 }
 
+// ---- Grouping ----
+
+interface LogGroup {
+  label: string
+  description: string
+  files: LogFileEntry[]
+}
+
+function classifyFile(filename: string): string {
+  const lower = filename.toLowerCase()
+  if (lower.startsWith('zi_acq'))         return 'zi_acq'
+  if (lower.startsWith('gom-hal'))        return 'gom-hal'
+  if (lower.startsWith('gom-acq'))        return 'gom-acq'
+  if (lower.startsWith('zeiss_inspect'))  return 'zeiss_inspect'
+  if (lower.startsWith('gomsoftware') || lower.startsWith('gom-software')) return 'gomsoftware'
+  if (lower.startsWith('gom-'))           return 'gom-other'
+  return 'other'
+}
+
+const GROUP_META: Record<string, { label: string; description: string }> = {
+  zeiss_inspect: { label: 'ZEISS INSPECT',           description: 'Main application logs' },
+  zi_acq:        { label: 'Acquisition (zi_acq)',     description: 'ZEISS 2026 acquisition session logs' },
+  'gom-hal':     { label: 'Hardware Abstraction Layer', description: 'HAL / hardware driver logs' },
+  'gom-acq':     { label: 'GOM Acquisition',          description: 'GOM acquisition controller logs' },
+  gomsoftware:   { label: 'GOM Software',             description: 'GOM software platform logs' },
+  'gom-other':   { label: 'GOM (other)',              description: 'Other GOM subsystem logs' },
+  other:         { label: 'Other',                    description: 'Uncategorised log files' },
+}
+
+const GROUP_ORDER = ['zeiss_inspect', 'zi_acq', 'gom-hal', 'gom-acq', 'gomsoftware', 'gom-other', 'other']
+
+function buildGroups(files: LogFileEntry[]): LogGroup[] {
+  const buckets: Record<string, LogFileEntry[]> = {}
+  for (const file of files) {
+    const key = classifyFile(file.filename)
+    ;(buckets[key] ??= []).push(file)
+  }
+  return GROUP_ORDER
+    .filter((k) => buckets[k]?.length)
+    .map((k) => ({
+      label: GROUP_META[k].label,
+      description: GROUP_META[k].description,
+      files: buckets[k],
+    }))
+}
+
+// ---- Component ----
+
 export function LogsPanel({ result }: Props) {
   const { logs, log_inventory } = result
 
@@ -13,10 +61,10 @@ export function LogsPanel({ result }: Props) {
   const hasInventory = log_inventory != null && log_inventory.files.length > 0
 
   if (!hasLogs && !hasInventory) {
-    return (
-      <div className="card panel-placeholder">No log data available.</div>
-    )
+    return <div className="card panel-placeholder">No log data available.</div>
   }
+
+  const groups = hasInventory ? buildGroups(log_inventory!.files) : []
 
   return (
     <div className="panel-stack">
@@ -45,23 +93,46 @@ export function LogsPanel({ result }: Props) {
         </section>
       )}
 
-      {/* Log file inventory */}
-      {hasInventory && (
-        <section className="card">
-          <h2 className="panel-heading">Log Files ({log_inventory!.files.length})</h2>
-          <div className="log-file-list">
-            {log_inventory!.files.map((file, i) => (
-              <LogFileCard key={i} file={file} />
-            ))}
-          </div>
-        </section>
-      )}
-
+      {/* Grouped log files */}
+      {groups.map((group) => (
+        <LogGroupSection key={group.label} group={group} />
+      ))}
     </div>
   )
 }
 
-/* ---- Log File Card ---- */
+// ---- Log Group Section ----
+
+function LogGroupSection({ group }: { group: LogGroup }) {
+  const [open, setOpen] = useState(true)
+
+  const errorCount  = group.files.filter((f) => f.has_errors).length
+  const warnCount   = group.files.filter((f) => f.has_warnings).length
+
+  return (
+    <section className="card log-group">
+      <button className="log-group-header" onClick={() => setOpen((v) => !v)}>
+        <span className="log-group-chevron">{open ? '▾' : '▸'}</span>
+        <span className="log-group-label">{group.label}</span>
+        <span className="log-group-count">{group.files.length} file{group.files.length !== 1 ? 's' : ''}</span>
+        {errorCount  > 0 && <span className="badge badge-critical">{errorCount} w/ errors</span>}
+        {warnCount   > 0 && <span className="badge badge-warning">{warnCount} w/ warnings</span>}
+        <span className="log-group-desc">{group.description}</span>
+      </button>
+
+      {open && (
+        <div className="log-file-list">
+          {group.files.map((file, i) => (
+            <LogFileCard key={i} file={file} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ---- Log File Card ----
+
 function LogFileCard({ file }: { file: LogFileEntry }) {
   const [open, setOpen] = useState(false)
   const sizeKb = (file.size_bytes / 1024).toFixed(1)
@@ -75,12 +146,9 @@ function LogFileCard({ file }: { file: LogFileEntry }) {
             {file.line_count.toLocaleString()} lines · {sizeKb} KB
             {file.first_timestamp && ` · ${file.first_timestamp}`}
           </span>
-          {file.description && (
-            <span className="log-file-desc">{file.description}</span>
-          )}
         </div>
         <div className="log-file-badges">
-          {file.has_errors && <span className="badge badge-critical">Errors</span>}
+          {file.has_errors   && <span className="badge badge-critical">Errors</span>}
           {file.has_warnings && <span className="badge badge-warning">Warnings</span>}
           {file.content && (
             <button className="btn-open-log" onClick={() => setOpen((v) => !v)}>
@@ -89,12 +157,11 @@ function LogFileCard({ file }: { file: LogFileEntry }) {
           )}
         </div>
       </div>
+
       {open && file.content && (
         <div className="log-file-viewer">
           <div className="log-file-viewer-toolbar">
-            <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
-              {file.path}
-            </span>
+            <span className="log-file-viewer-path">{file.path}</span>
             <button
               className="btn-copy-log"
               onClick={() => navigator.clipboard.writeText(file.content!)}

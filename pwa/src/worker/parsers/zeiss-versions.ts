@@ -70,9 +70,11 @@ export class ZeissVersionsParser extends BaseParser<ZeissVersions> {
         if (!text) continue
         try {
           const data = JSON.parse(text) as Record<string, unknown>
-          // Python reads: data.get("software", {}).get("majorVersion")
+          // Python reads majorVersion ("7"), but sw.version has the full build ("7.1.2847.0")
           const sw = data['software'] as Record<string, unknown> | undefined
-          const version = sw?.['majorVersion'] as string | undefined ?? this._extractVersion(data)
+          const version = (
+            sw?.['version'] ?? sw?.['fullVersion'] ?? sw?.['majorVersion']
+          ) as string | undefined ?? this._extractVersion(data)
           if (version) {
             result.quality_suite_version = String(version)
             result.raw_version_data['zqs_json'] = data

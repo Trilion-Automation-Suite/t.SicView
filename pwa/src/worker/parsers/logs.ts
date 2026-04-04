@@ -124,6 +124,7 @@ export class LogsParser extends BaseParser<LogSummary> {
         filename,
         path: vpath,
         size_bytes: bytes.length,
+        content: text,
         line_count: lines.length,
         has_errors: hasErrors,
         has_warnings: hasWarnings,

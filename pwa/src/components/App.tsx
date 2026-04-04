@@ -98,7 +98,7 @@ export function App() {
   return (
     <>
       <header className="app-header">
-        <img src="/icons/weblogo.png" alt="Trilion" className="header-logo" />
+        <img src={`${import.meta.env.BASE_URL}icons/weblogo.png`} alt="Trilion" className="header-logo" />
         <span className="header-app-name">t.SicView</span>
         <span className="header-beta">BETA</span>
         <span className="header-subtitle">ZEISS Diagnostic Archive Viewer</span>
