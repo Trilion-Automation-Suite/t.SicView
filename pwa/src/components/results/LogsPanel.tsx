@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ParseResult, LogFileEntry } from '../../worker/models'
 import './Results.css'
 
@@ -163,47 +163,88 @@ function LogGroupSection({
 // ---- Log File Card ----
 
 function LogFileCard({ file }: { file: LogFileEntry }) {
-  const [open, setOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const sizeKb = (file.size_bytes / 1024).toFixed(1)
 
+  // Close modal on Escape
+  useEffect(() => {
+    if (!modalOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [modalOpen])
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [modalOpen])
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(file.content!)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleSaveAs = () => {
+    const blob = new Blob([file.content!], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="log-file-card">
-      <div className="log-file-row">
-        <div className="log-file-info">
-          <span className="log-file-name">{file.filename}</span>
-          <span className="log-file-stats">
-            {file.line_count.toLocaleString()} lines · {sizeKb} KB
-            {file.first_timestamp && ` · ${file.first_timestamp}`}
-          </span>
-        </div>
-        <div className="log-file-badges">
-          {file.has_errors   && <span className="badge badge-critical">Errors</span>}
-          {file.has_warnings && <span className="badge badge-warning">Warnings</span>}
-          {file.content && (
-            <button className="btn-open-log" onClick={() => setOpen((v) => !v)}>
-              {open ? 'Close' : 'Open'}
-            </button>
-          )}
+    <>
+      <div className="log-file-card">
+        <div className="log-file-row">
+          <div className="log-file-info">
+            <span className="log-file-name">{file.filename}</span>
+            <span className="log-file-stats">
+              {file.line_count.toLocaleString()} lines · {sizeKb} KB
+              {file.first_timestamp && ` · ${file.first_timestamp}`}
+            </span>
+          </div>
+          <div className="log-file-badges">
+            {file.has_errors   && <span className="badge badge-critical">Errors</span>}
+            {file.has_warnings && <span className="badge badge-warning">Warnings</span>}
+            {file.content && (
+              <button className="btn-open-log" onClick={() => setModalOpen(true)}>
+                Open
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {open && file.content && (
-        <div className="log-file-viewer">
-          <div className="log-file-viewer-toolbar">
-            <span className="log-file-viewer-path">{file.path}</span>
-            <button
-              className="btn-copy-log"
-              onClick={() => navigator.clipboard.writeText(file.content!)}
-            >
-              Copy
-            </button>
+      {modalOpen && file.content && (
+        <div className="log-modal-backdrop" onClick={() => setModalOpen(false)}>
+          <div className="log-modal" onClick={e => e.stopPropagation()}>
+            <div className="log-modal-header">
+              <div className="log-modal-title">
+                <span className="log-file-name">{file.filename}</span>
+                <span className="log-file-stats">{file.path}</span>
+              </div>
+              <div className="log-modal-actions">
+                <button className="btn-copy-log" onClick={handleSaveAs}>Save as</button>
+                <button className="btn-copy-log" onClick={handleCopy}>{copied ? 'Copied!' : 'Copy'}</button>
+                <button className="log-modal-close" onClick={() => setModalOpen(false)} aria-label="Close">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+            <pre className="log-modal-content">
+              {file.content.slice(0, 500_000)}
+              {file.content.length > 500_000 && '\n\n[... truncated — first 500 000 chars shown ...]'}
+            </pre>
           </div>
-          <pre className="log-content">
-            {file.content.slice(0, 100_000)}
-            {file.content.length > 100_000 && '\n\n[... truncated — first 100 000 chars shown ...]'}
-          </pre>
         </div>
       )}
-    </div>
+    </>
   )
 }

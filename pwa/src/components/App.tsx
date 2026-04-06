@@ -5,6 +5,7 @@ import type { ParseResult } from '../worker/models'
 import { FileDropzone } from './FileDropzone'
 import { ProgressPanel } from './ProgressPanel'
 import { ResultsView } from './results/ResultsView'
+import { exportPlainText } from './results/exportText'
 
 // Worker message types (must match parse-worker.ts)
 type WorkerInMsg = {
@@ -30,7 +31,7 @@ type AppState =
 
 export function App() {
   const [state, setState] = useState<AppState>({ status: 'idle' })
-  const [darkMode, setDarkMode] = useState(true) // dark-first for this tool
+  const [darkMode, setDarkMode] = useState(false)
   const workerRef = useRef<Worker | null>(null)
   const pendingIdRef = useRef<string | null>(null)
 
@@ -108,17 +109,28 @@ export function App() {
         <div className="header-actions">
           {state.status === 'done' && (
             <>
-              <button className="btn-ghost" onClick={handleRetry}>Load another</button>
               <button
                 className="btn-icon"
-                onClick={() => window.print()}
-                aria-label="Export to PDF"
-                title="Export to PDF"
+                onClick={handleRetry}
+                aria-label="Load another file"
+                title="Load another file"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="6 9 6 2 18 2 18 9" />
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect x="6" y="14" width="12" height="8" />
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
+              <button
+                className="btn-icon"
+                onClick={() => exportPlainText(state.result, state.filename)}
+                aria-label="Export as text"
+                title="Export as text"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
               </button>
             </>

@@ -7,15 +7,27 @@ interface Props {
 }
 
 export function VersionsPanel({ result }: Props) {
-  const { zeiss_versions, product_type, detected_product } = result
+  const { zeiss_versions, product_type, detected_product, drivers } = result
+
+  // Prefer the full version from InstalledPrograms.log (e.g. 7.0.2770.0) over JSON majorVersion ("7")
+  const zqsFromDrivers = drivers?.all_relevant_drivers.find(d =>
+    /ZEISS\s+Quality\s+Suite/i.test(d.name),
+  )?.version
+
+  const enrichedVersions: ZeissVersions | undefined = zeiss_versions
+    ? {
+        ...zeiss_versions,
+        quality_suite_version: zqsFromDrivers ?? zeiss_versions.quality_suite_version,
+      }
+    : undefined
 
   return (
     <div className="panel-stack">
-      <InspectVersionCard versions={zeiss_versions} />
+      <InspectVersionCard versions={enrichedVersions} />
       <ProductCard
         productType={product_type}
         detectedProduct={detected_product}
-        versions={zeiss_versions}
+        versions={enrichedVersions}
       />
       {zeiss_versions && Object.keys(zeiss_versions.raw_version_data).length > 0 && (
         <RawVersionCard raw={zeiss_versions.raw_version_data} />
