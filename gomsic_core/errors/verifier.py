@@ -13,7 +13,7 @@ from typing import Any, Optional
 
 import yaml
 
-from ..models import ParseResult, ProductType
+from ..models import ParseResult
 
 logger = logging.getLogger(__name__)
 
@@ -169,12 +169,12 @@ def run_verifications(result: ParseResult, kb_dir: Path) -> list[VerifiedCheck]:
 
         # CORRELATE license for DIC systems
         if product_val.startswith("ARAMIS"):
-            correlate = [l for l in lic.licenses if "CORRELATE" in (l.product or "").upper()]
+            correlate = [entry for entry in lic.licenses if "CORRELATE" in (entry.product or "").upper()]
             if correlate:
                 c = correlate[0]
                 checks.append(VerifiedCheck(
                     "license",
-                    f"ZEISS CORRELATE license present",
+                    "ZEISS CORRELATE license present",
                     f"Version: {c.version or '?'}, Expiry: {c.expiry or 'N/A'}",
                     "licenses.csv",
                 ))
@@ -232,7 +232,7 @@ def run_verifications(result: ParseResult, kb_dir: Path) -> list[VerifiedCheck]:
             port_str = f" on port {grpc_port.port}" if grpc_port else ""
             checks.append(VerifiedCheck(
                 "system", f"HAL gRPC service listening{port_str}",
-                f"Hardware Service RPC interface is operational",
+                "Hardware Service RPC interface is operational",
                 "GOM-HAL log",
             ))
         if hs.running:

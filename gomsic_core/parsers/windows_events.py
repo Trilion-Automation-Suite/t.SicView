@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import Evtx.Evtx as evtx
-    import Evtx.Views as evtx_views
+    import Evtx.Views as evtx_views  # noqa: F401
     HAS_EVTX = True
 except ImportError:
     HAS_EVTX = False

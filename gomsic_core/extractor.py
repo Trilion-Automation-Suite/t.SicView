@@ -11,7 +11,6 @@ where each component ended up on disk.
 from __future__ import annotations
 
 import logging
-import os
 import shutil
 import tarfile
 import tempfile

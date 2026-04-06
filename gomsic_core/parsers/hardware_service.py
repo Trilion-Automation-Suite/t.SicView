@@ -94,8 +94,8 @@ class HardwareServiceParser(BaseParser):
                 text = self.read_text_file(tasklist_path)
                 if text:
                     ctx.file_parsed(str(tasklist_path))
-                    hw_procs = [l for l in text.splitlines()
-                                if re.search(r"hardware.?service|HardwareSer", l, re.IGNORECASE)]
+                    hw_procs = [line for line in text.splitlines()
+                                if re.search(r"hardware.?service|HardwareSer", line, re.IGNORECASE)]
                     if hw_procs:
                         info.running = True
                         info.process_name = hw_procs[0].split()[0]
@@ -192,7 +192,7 @@ class HardwareServiceParser(BaseParser):
                     pass
 
         # Count startup events to detect restart cycles
-        start_count = sum(1 for l in lines if "Starting HAL" in l or "HAL initialization" in l)
+        start_count = sum(1 for line in lines if "Starting HAL" in line or "HAL initialization" in line)
         if start_count > 1:
             info.timeline.append(f"WARNING: {start_count} HAL startup events detected (restart cycle?)")
 
@@ -258,7 +258,7 @@ class HardwareServiceParser(BaseParser):
                     protocol="HTTP", address=m.group(1) or "127.0.0.1", status="listening",
                 )
                 info.ports.append(port)
-                info.timeline.append(self._ts_event(line, f"Web Management (MDM) listening on port 39001"))
+                info.timeline.append(self._ts_event(line, "Web Management (MDM) listening on port 39001"))
 
             # Device Communication: port 39025
             m = re.search(r"(?:device|communication).*?(?:listening|started|bound).*?:?(\d+)", line, re.IGNORECASE)
@@ -473,7 +473,6 @@ class HardwareServiceParser(BaseParser):
                 info.firewall_rules_found.append(exe_name)
         # Also look for firewall rule blocks (registry format)
         for m in re.finditer(r"FirewallRules.*?\"([^\"]+)\"=\"([^\"]+)\"", text, re.IGNORECASE):
-            rule_name = m.group(1)
             rule_value = m.group(2)
             for exe_name in fw_checks:
                 if exe_name.lower() in rule_value.lower() and exe_name not in info.firewall_rules_found:

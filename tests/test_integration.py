@@ -5,13 +5,12 @@ Tests the ZIP archive (full QSR format) and .tgz archives (raw gomsic format).
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
 
 from gomsic_core.api import parse_archive
-from gomsic_core.models import ProductType, Severity
+from gomsic_core.models import ProductType
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -106,7 +105,7 @@ class TestZIPArchive:
         lic = self.result.licensing
         assert lic is not None
         # Check that ARAMIS 24M sensor driver license exists
-        product_names = [l.product for l in lic.licenses if l.product]
+        product_names = [entry.product for entry in lic.licenses if entry.product]
         assert any("ARAMIS 24M" in p for p in product_names)
 
     # --- Network ---
@@ -312,10 +311,9 @@ class TestTGZArchive2024A:
         assert si is not None
 
     def test_gomsoftware_cfg_parsed(self):
-        cfg = self.result.gomsoftware_config
+        self.result.gomsoftware_config  # noqa: B018
         # May or may not exist depending on archive contents
         # Just ensure no crash
-        pass
 
     def test_parse_completes(self):
         """Verify parsing completes without errors."""

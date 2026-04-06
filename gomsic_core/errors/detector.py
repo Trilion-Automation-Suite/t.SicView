@@ -542,7 +542,7 @@ class ErrorDetector:
             elif min_ver and self._version_lt(dotnet_version, min_ver):
                 findings.append(Finding(
                     severity=Severity.WARNING,
-                    title=f".NET Runtime version outdated",
+                    title=".NET Runtime version outdated",
                     description=(
                         f"Installed .NET Runtime: {dotnet_version}, required >= {min_ver} "
                         f"for ZEISS INSPECT {major}."

@@ -18,7 +18,6 @@ from typing import Optional
 
 from ..debug_log.trace import ParserTraceContext
 from ..extractor import ArchiveLayout
-from ..models import CameraConfig, CameraInfo
 from .base import BaseParser
 
 logger = logging.getLogger(__name__)

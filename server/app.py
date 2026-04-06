@@ -21,7 +21,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from gomsic_core import __version__
 from gomsic_core.api import parse_archive
-from gomsic_core.models import ProductType
 
 app = FastAPI(
     title="t.SicView",

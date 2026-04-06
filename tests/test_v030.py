@@ -7,34 +7,23 @@ using synthetic test data (no real fixture archives required).
 from __future__ import annotations
 
 import re
-import sqlite3
 import tempfile
 import zipfile
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
 import yaml
 
 from gomsic_core.models import (
-    ActivityEvent,
     ActivityTimeline,
     CodeMeterInfo,
-    DongleInfo,
-    DriverInfo,
-    Finding,
     HardwareServiceInfo,
-    InstalledDriver,
-    LicenseEntry,
     LicenseInfo,
     LogFileEntry,
-    LogInventory,
     NetworkAdapter,
     NetworkInfo,
     ParseResult,
-    ProductType,
-    Severity,
     StorageDrive,
     SystemInfo,
 )
@@ -206,9 +195,6 @@ class TestDotNetVersionFiltering:
 class TestProblemDevicesHeaderFiltering:
     def test_skip_header_row(self):
         """The msinfo32 Problem Devices section has a 'Device / PNP Device ID' header row."""
-        from gomsic_core.parsers.system_info import SystemInfoParser
-        parser = SystemInfoParser()
-
         # The parser filters based on item/value content
         # "Device" as item with "PNP Device ID" as value should be skipped
         sections = {
@@ -217,7 +203,6 @@ class TestProblemDevicesHeaderFiltering:
                 {"Item": "Intel(R) Management Engine", "Value": "PCI\\VEN_8086"},
             ]
         }
-        info = SystemInfo(sections=sections)
         # Simulate what the parser does
         problem_devices = []
         for row in sections["Problem Devices"]:

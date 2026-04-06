@@ -5,27 +5,17 @@ Tests parser logic in isolation using synthetic data, not real fixture archives.
 
 from __future__ import annotations
 
-import json
-import sqlite3
 import tempfile
 from pathlib import Path
-from typing import Optional
-from unittest.mock import MagicMock
 
-import pytest
 
 from gomsic_core.models import (
-    DriverInfo,
-    Finding,
     HardwareServiceInfo,
-    InstalledDriver,
     LogFileEntry,
-    LogInventory,
     NetworkAdapter,
     NetworkInfo,
     ParseResult,
     ProductType,
-    Severity,
     SystemInfo,
 )
 
