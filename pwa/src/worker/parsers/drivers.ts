@@ -19,6 +19,8 @@ const RELEVANT_PROGRAMS: [RegExp, string][] = [
   [/Intel.*Network\s+Connections/i, 'intel_net'],
   [/\.NET\s+(?:Desktop\s+)?Runtime\s+-\s+\d/i, 'dotnet'],
   [/Visual\s+C\+\+.*Redistributable.*x64|VC_Redist.*x64/i, 'vcredist'],
+  [/Edge\s+WebView2|WebView2\s+Runtime/i, 'webview2'],
+  [/MARX|Crypto[\s-]?Box/i, 'marx_cryptobox'],
   [/Emergent.*Camera|eCapture/i, 'emergent_camera'],
   [/ZEISS\s+CORRELATE|GOM\s+Correlate/i, 'correlate'],
 ]

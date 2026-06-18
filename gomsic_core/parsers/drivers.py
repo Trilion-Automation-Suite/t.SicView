@@ -34,6 +34,8 @@ _RELEVANT_PROGRAMS = [
     (re.compile(r"Intel.*Network\s+Connections", re.IGNORECASE), "intel_net"),
     (re.compile(r"\.NET\s+(?:Desktop\s+)?Runtime\s+-\s+\d", re.IGNORECASE), "dotnet"),
     (re.compile(r"Visual\s+C\+\+.*Redistributable.*x64|VC_Redist.*x64", re.IGNORECASE), "vcredist"),
+    (re.compile(r"Edge\s+WebView2|WebView2\s+Runtime", re.IGNORECASE), "webview2"),
+    (re.compile(r"MARX|Crypto[\s-]?Box", re.IGNORECASE), "marx_cryptobox"),
     (re.compile(r"Emergent.*Camera|eCapture", re.IGNORECASE), "emergent_camera"),
     (re.compile(r"ZEISS\s+CORRELATE|GOM\s+Correlate", re.IGNORECASE), "correlate"),
 ]
