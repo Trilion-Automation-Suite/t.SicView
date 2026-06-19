@@ -27,7 +27,7 @@ server = [
 ]
 evtx = ["python-evtx>=0.7"]
 pdf = ["weasyprint>=60.0"]
-standalone = ["pyinstaller>=6.0"]
+standalone = ["pyinstaller>=6.19.0"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
