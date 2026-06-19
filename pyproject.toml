@@ -23,7 +23,7 @@ server = [
     "fastapi>=0.100",
     "uvicorn>=0.20",
     "jinja2>=3.0",
-    "python-multipart>=0.0.5",
+    "python-multipart>=0.0.20",
 ]
 evtx = ["python-evtx>=0.7"]
 pdf = ["weasyprint>=60.0"]
